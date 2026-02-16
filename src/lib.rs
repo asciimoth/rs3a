@@ -1,10 +1,9 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::cmp::PartialEq;
 use std::convert::{Into, TryFrom};
 use std::sync::Arc;
 use std::{fmt, fs, io};
-#[macro_use]
-extern crate lazy_static;
 #[cfg(test)]
 mod tests;
 
@@ -110,10 +109,10 @@ pub fn load(s: String) -> Result<Art, ParcingError> {
     Ok(Art { header, body })
 }
 
-pub fn save(art: Art, pretify: bool) -> String {
+pub fn save(art: Art, prettify: bool) -> String {
     let mut ret: String = art.header.into();
     ret += "\n";
-    ret += &art.body.to_string(pretify);
+    ret += &art.body.to_string(prettify);
     ret
 }
 
@@ -128,8 +127,8 @@ pub fn load_file(path: String) -> Result<Art, ReadingError> {
     }
 }
 
-pub fn save_file(art: Art, path: String, pretify: bool) -> Result<(), io::Error> {
-    let s = save(art, pretify);
+pub fn save_file(art: Art, path: String, prettify: bool) -> Result<(), io::Error> {
+    let s = save(art, prettify);
     match fs::write(path, s) {
         Ok(_) => Ok(()),
         Err(e) => Err(e),
@@ -333,7 +332,7 @@ impl Body {
         }
         ret
     }
-    pub fn to_string(self, pretify: bool) -> String {
+    pub fn to_string(self, prettify: bool) -> String {
         let mut ret: String = "".to_string();
         for (frm, frame) in self.frames.iter().enumerate() {
             for row in frame {
@@ -350,7 +349,7 @@ impl Body {
                 ret += &text_col;
                 ret += &color1_col;
                 ret += &color2_col;
-                if pretify {
+                if prettify {
                     ret.push('\n');
                 }
             }

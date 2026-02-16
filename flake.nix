@@ -21,6 +21,7 @@
         pre-commit-check = pre-commit-hooks.lib.${system}.run {
           src = ./.;
           hooks = {
+            cargo-check.enable = true;
             commitizen.enable = true;
             typos.enable = true;
             typos-commit = {
@@ -31,6 +32,13 @@
               ''; in builtins.toString script;
               stages = [ "commit-msg" ];
             };
+            cargo-test = {
+              enable = true;
+              name = "cargo test (workspace)";
+              entry = "cargo test --workspace --all-features";
+              pass_filenames = false;
+              stages = [ "pre-commit" ];
+            };
           };
         };
       };
@@ -39,6 +47,7 @@
         inherit (checks.pre-commit-check) shellHook;
         buildInputs = with pkgs; [
           cargo
+          # clippy
 
           typos
           commitizen
