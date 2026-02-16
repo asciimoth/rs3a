@@ -1,19 +1,3 @@
-/*
-    This file is part of rs3a.
-
-    rs3a is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    rs3a is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with rs3a.  If not, see <https://www.gnu.org/licenses/>.
-*/
 mod tests {
     use crate::*;
     const A: &str = "	Header starts here
@@ -152,72 +136,70 @@ gQ{ikr-5fyM<{ny6=]r4U$77cc77cccccc77cc77cc770033003333330033003300
 iVG.vOv5uWkulYY#GT[&Tm77777777777777777777770000000000000000000000
 U0DC_D-@ml4[7sP7&)C9Q>77777777777777777777770000000000000000000000";
     #[test]
-    fn test_escape_comments(){
+    fn test_escape_comments() {
         assert_eq!(escape_comments(A), B.to_string());
     }
 }
 
-mod body_to_text_test{
+mod body_to_text_test {
     use crate::*;
     #[test]
-    fn test_correct_fullcolor(){
+    fn test_correct_fullcolor() {
         let text_reference = "AAAAaabb1122\nBBBBaabc1122\nCCCCaaaa1111\nDDDDabcd1111\n\nAAAAaabb1122\nBBBBaabc1122\nCCCCaaaa1111\nDDDDabcd1111\n";
-        let body = Body{
+        let body = Body {
             frames: vec![
                 vec![
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
                     ],
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "BB".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
                     ],
+                    vec![RowFragment {
+                        text: "CCCC".to_string(),
+                        bg_color: Some(Color::BLUE),
+                        fg_color: Some(Color::BRIGHT_GREEN),
+                    }],
                     vec![
-                        RowFragment{
-                            text: "CCCC".to_string(),
-                            bg_color: Some(Color::BLUE),
-                            fg_color: Some(Color::BRIGHT_GREEN),
-                        },
-                    ],
-                    vec![
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_MAGENTA),
@@ -226,58 +208,56 @@ mod body_to_text_test{
                 ],
                 vec![
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
                     ],
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "BB".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
                     ],
+                    vec![RowFragment {
+                        text: "CCCC".to_string(),
+                        bg_color: Some(Color::BLUE),
+                        fg_color: Some(Color::BRIGHT_GREEN),
+                    }],
                     vec![
-                        RowFragment{
-                            text: "CCCC".to_string(),
-                            bg_color: Some(Color::BLUE),
-                            fg_color: Some(Color::BRIGHT_GREEN),
-                        },
-                    ],
-                    vec![
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_MAGENTA),
@@ -290,11 +270,11 @@ mod body_to_text_test{
     }
 }
 
-mod body_from_text_test{
+mod body_from_text_test {
     use crate::*;
     #[test]
-    fn test_correct_fullcolor(){
-        let header = Header{
+    fn test_correct_fullcolor() {
+        let header = Header {
             width: 4,
             height: 4,
             delay: 200,
@@ -307,62 +287,60 @@ mod body_from_text_test{
             title: None,
             author: None,
         };
-        let body_reference = Body{
+        let body_reference = Body {
             frames: vec![
                 vec![
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
                     ],
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "BB".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
                     ],
+                    vec![RowFragment {
+                        text: "CCCC".to_string(),
+                        bg_color: Some(Color::BLUE),
+                        fg_color: Some(Color::BRIGHT_GREEN),
+                    }],
                     vec![
-                        RowFragment{
-                            text: "CCCC".to_string(),
-                            bg_color: Some(Color::BLUE),
-                            fg_color: Some(Color::BRIGHT_GREEN),
-                        },
-                    ],
-                    vec![
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_MAGENTA),
@@ -371,58 +349,56 @@ mod body_from_text_test{
                 ],
                 vec![
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "AA".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
                     ],
                     vec![
-                        RowFragment{
+                        RowFragment {
                             text: "BB".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "B".to_string(),
                             bg_color: Some(Color::GREEN),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
                     ],
+                    vec![RowFragment {
+                        text: "CCCC".to_string(),
+                        bg_color: Some(Color::BLUE),
+                        fg_color: Some(Color::BRIGHT_GREEN),
+                    }],
                     vec![
-                        RowFragment{
-                            text: "CCCC".to_string(),
-                            bg_color: Some(Color::BLUE),
-                            fg_color: Some(Color::BRIGHT_GREEN),
-                        },
-                    ],
-                    vec![
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_GREEN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_CYAN),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_RED),
                         },
-                        RowFragment{
+                        RowFragment {
                             text: "D".to_string(),
                             bg_color: Some(Color::BLUE),
                             fg_color: Some(Color::BRIGHT_MAGENTA),
@@ -432,66 +408,86 @@ mod body_from_text_test{
             ],
         };
         let text = "AAAAaabb1122\nBBBBaabc1122\nCCCCaaaa1111\nDDDDabcd1111\n\nAAAAaabb1122\nBBBBaabc1122\nCCCCaaaa1111\nDDDDabcd1111\n";
-        match Body::from_string(text.to_string(),header) {
-            Ok(result) => {assert_eq!(body_reference, result);}
-            Err(_) => {assert!(false, "Unexpected parcing error");}
+        match Body::from_string(text.to_string(), header) {
+            Ok(result) => {
+                assert_eq!(body_reference, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
 }
 
-mod colormod_test{
+mod colormod_test {
     use crate::*;
-    use std::convert::{TryFrom, Into};
+    use std::convert::{Into, TryFrom};
     #[test]
-    fn test_none(){
+    fn test_none() {
         let base = ColorMod::None;
         let s: String = base.into();
         let s: &str = &s;
-        match ColorMod::try_from(s){
-            Ok(result) => {assert_eq!(base, result);}
-            Err(_) => {assert!(false, "Unexpected parcing error");}
+        match ColorMod::try_from(s) {
+            Ok(result) => {
+                assert_eq!(base, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn test_fg(){
+    fn test_fg() {
         let base = ColorMod::Fg;
         let s: String = base.into();
         let s: &str = &s;
-        match ColorMod::try_from(s){
-            Ok(result) => {assert_eq!(base, result);}
-            Err(_) => {assert!(false, "Unexpected parcing error");}
+        match ColorMod::try_from(s) {
+            Ok(result) => {
+                assert_eq!(base, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn test_bg(){
+    fn test_bg() {
         let base = ColorMod::Bg;
         let s: String = base.into();
         let s: &str = &s;
-        match ColorMod::try_from(s){
-            Ok(result) => {assert_eq!(base, result);}
-            Err(_) => {assert!(false, "Unexpected parcing error");}
+        match ColorMod::try_from(s) {
+            Ok(result) => {
+                assert_eq!(base, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn test_full(){
+    fn test_full() {
         let base = ColorMod::Full;
         let s: String = base.into();
         let s: &str = &s;
-        match ColorMod::try_from(s){
-            Ok(result) => {assert_eq!(base, result);}
-            Err(_) => {assert!(false, "Unexpected parcing error");}
+        match ColorMod::try_from(s) {
+            Ok(result) => {
+                assert_eq!(base, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
 }
 
-mod header_to_string_tests{
+mod header_to_string_tests {
     use crate::*;
     #[test]
-    fn all_params(){
-        let header = Header{
+    fn all_params() {
+        let header = Header {
             width: 1,
             height: 2,
-            delay: DEFAULT_DELAY+1,
+            delay: DEFAULT_DELAY + 1,
             loop_enable: !DEFAULT_LOOP,
             color_mod: ColorMod::Full,
             utf8: true,
@@ -506,8 +502,8 @@ mod header_to_string_tests{
         assert_eq!(s_ref, s);
     }
     #[test]
-    fn default_params(){
-        let header = Header{
+    fn default_params() {
+        let header = Header {
             width: 1,
             height: 2,
             delay: DEFAULT_DELAY,
@@ -525,15 +521,15 @@ mod header_to_string_tests{
         assert_eq!(s_ref, s);
     }
     #[test]
-    fn datacols(){
-        let header = Header{
+    fn datacols() {
+        let header = Header {
             width: 1,
             height: 2,
             delay: DEFAULT_DELAY,
             loop_enable: DEFAULT_LOOP,
             color_mod: DEFAULT_COLORS,
             utf8: DEFAULT_UTF8,
-            datacols: DEFAULT_COLORS.to_datacols()+1,
+            datacols: DEFAULT_COLORS.to_datacols() + 1,
             preview: DEFAULT_PREVIEW,
             audio: None,
             title: None,
@@ -545,13 +541,13 @@ mod header_to_string_tests{
     }
 }
 
-mod header_from_string_tests{
+mod header_from_string_tests {
     use crate::*;
-    use std::convert::{TryFrom};
+    use std::convert::TryFrom;
     #[test]
-    fn full(){
+    fn full() {
         let s = "width 1\nheight 2\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\npreview 1\naudio 12345".to_string();
-        let refernce = Header{
+        let refernce = Header {
             width: 1,
             height: 2,
             delay: 3,
@@ -564,18 +560,22 @@ mod header_from_string_tests{
             title: None,
             author: None,
         };
-        match Header::try_from(s){
-            Ok(result) => { assert_eq!(refernce, result); }
-            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        match Header::try_from(s) {
+            Ok(result) => {
+                assert_eq!(refernce, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn only_required(){
+    fn only_required() {
         let s = "width 1\nheight 2".to_string();
-        let refernce = Header{
+        let refernce = Header {
             width: 1,
             height: 2,
-             delay: 50,
+            delay: 50,
             loop_enable: true,
             color_mod: ColorMod::None,
             utf8: false,
@@ -585,18 +585,23 @@ mod header_from_string_tests{
             title: None,
             author: None,
         };
-        match Header::try_from(s){
-            Ok(result) => { assert_eq!(refernce, result); }
-            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        match Header::try_from(s) {
+            Ok(result) => {
+                assert_eq!(refernce, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn optional_incorrect(){
-        let s = "width 1\nheight 2\ndelay safdsfsdf\nloop dsfsdf\ncolors dfdfdf\ndatacols dfsfsddf".to_string();
-        let refernce = Header{
+    fn optional_incorrect() {
+        let s = "width 1\nheight 2\ndelay safdsfsdf\nloop dsfsdf\ncolors dfdfdf\ndatacols dfsfsddf"
+            .to_string();
+        let refernce = Header {
             width: 1,
             height: 2,
-             delay: 50,
+            delay: 50,
             loop_enable: true,
             color_mod: ColorMod::None,
             utf8: false,
@@ -606,32 +611,36 @@ mod header_from_string_tests{
             title: None,
             author: None,
         };
-        match Header::try_from(s){
-            Ok(result) => { assert_eq!(refernce, result); }
-            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        match Header::try_from(s) {
+            Ok(result) => {
+                assert_eq!(refernce, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn width_incorrect(){
+    fn width_incorrect() {
         let s = "width sdfsfsdf\nheight 2\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\naudio 12345".to_string();
-        if let Ok(_) = Header::try_from(s){
+        if let Ok(_) = Header::try_from(s) {
             assert!(false, "Unexpected Ok");
         }
     }
     #[test]
-    fn height_incorrect(){
+    fn height_incorrect() {
         let s = "width 1\nheight sdfsdfsdf\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\naudio 12345".to_string();
-        if let Ok(_) = Header::try_from(s){
+        if let Ok(_) = Header::try_from(s) {
             assert!(false, "Unexpected Ok");
         }
     }
     #[test]
-    fn datacols(){
+    fn datacols() {
         let s = "width 1\nheight 2\ncolors full".to_string();
-        let refernce = Header{
+        let refernce = Header {
             width: 1,
             height: 2,
-             delay: 50,
+            delay: 50,
             loop_enable: true,
             color_mod: ColorMod::Full,
             utf8: false,
@@ -641,15 +650,19 @@ mod header_from_string_tests{
             title: None,
             author: None,
         };
-        match Header::try_from(s){
-            Ok(result) => { assert_eq!(refernce, result); }
-            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        match Header::try_from(s) {
+            Ok(result) => {
+                assert_eq!(refernce, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
         let s = "width 1\nheight 2\ncolors full\ndatacols 0".to_string();
-        let refernce = Header{
+        let refernce = Header {
             width: 1,
             height: 2,
-             delay: 50,
+            delay: 50,
             loop_enable: true,
             color_mod: ColorMod::Full,
             utf8: false,
@@ -659,16 +672,21 @@ mod header_from_string_tests{
             title: None,
             author: None,
         };
-        match Header::try_from(s){
-            Ok(result) => { assert_eq!(refernce, result); }
-            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        match Header::try_from(s) {
+            Ok(result) => {
+                assert_eq!(refernce, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn extra_spaces(){
+    fn extra_spaces() {
         let s = "width    1\nheight    2\ndelay    3\nloop    false\ncolors    full \
-        \nutf8   \ndatacols    5\naudio    12345".to_string();
-        let refernce = Header{
+        \nutf8   \ndatacols    5\naudio    12345"
+            .to_string();
+        let refernce = Header {
             width: 1,
             height: 2,
             delay: 3,
@@ -681,16 +699,20 @@ mod header_from_string_tests{
             title: None,
             author: None,
         };
-        match Header::try_from(s){
-            Ok(result) => { assert_eq!(refernce, result); }
-            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        match Header::try_from(s) {
+            Ok(result) => {
+                assert_eq!(refernce, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
     #[test]
-    fn extra_params(){
+    fn extra_params() {
         let s = "width 1   sfdfsdf fdsfd sdf \nheight 2 fds dsfsdf\ndelay 3 fd ff \
         \nloop false   fdfdf  \ncolors full fdfd\nutf8  fdfdf\ndatacols 5 fdfd fd d\naudio 12345 fdfdfdf".to_string();
-        let refernce = Header{
+        let refernce = Header {
             width: 1,
             height: 2,
             delay: 3,
@@ -703,10 +725,13 @@ mod header_from_string_tests{
             title: None,
             author: None,
         };
-        match Header::try_from(s){
-            Ok(result) => { assert_eq!(refernce, result); }
-            Err(_) => { assert!(false, "Unexpected parcing error"); }
+        match Header::try_from(s) {
+            Ok(result) => {
+                assert_eq!(refernce, result);
+            }
+            Err(_) => {
+                assert!(false, "Unexpected parcing error");
+            }
         }
     }
 }
-

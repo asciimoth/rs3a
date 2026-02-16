@@ -95,3 +95,11 @@ struct RowFragment{
 ### Functions
 `load` and `save` functions allow you to convert strings to `Art` and back.  
 `load_file` and `save_file` functions allow you to read 3a files to `Art` and write `Art` to 3a files.  
+
+## License
+This project is licensed under either of
+
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.

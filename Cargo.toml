@@ -7,7 +7,7 @@ description = "Lib for reading and writing 3a format"
 repository = "https://github.com/DomesticMoth/rs3a"
 categories = ["text-processing", "parser-implementations", "parsing"]
 readme = "README.md"
-license = "GPL-3.0"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 regex = "1"
