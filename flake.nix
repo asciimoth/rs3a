@@ -41,6 +41,7 @@
           cargo
 
           typos
+          commitizen
         ];
       };
     });
