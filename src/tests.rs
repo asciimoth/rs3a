@@ -547,7 +547,7 @@ mod header_from_string_tests {
     #[test]
     fn full() {
         let s = "width 1\nheight 2\ndelay 3\nloop false\ncolors full\nutf8\ndatacols 5\npreview 1\naudio 12345".to_string();
-        let refernce = Header {
+        let reference = Header {
             width: 1,
             height: 2,
             delay: 3,
@@ -562,7 +562,7 @@ mod header_from_string_tests {
         };
         match Header::try_from(s) {
             Ok(result) => {
-                assert_eq!(refernce, result);
+                assert_eq!(reference, result);
             }
             Err(_) => {
                 assert!(false, "Unexpected parcing error");
@@ -572,7 +572,7 @@ mod header_from_string_tests {
     #[test]
     fn only_required() {
         let s = "width 1\nheight 2".to_string();
-        let refernce = Header {
+        let reference = Header {
             width: 1,
             height: 2,
             delay: 50,
@@ -587,7 +587,7 @@ mod header_from_string_tests {
         };
         match Header::try_from(s) {
             Ok(result) => {
-                assert_eq!(refernce, result);
+                assert_eq!(reference, result);
             }
             Err(_) => {
                 assert!(false, "Unexpected parcing error");
@@ -598,7 +598,7 @@ mod header_from_string_tests {
     fn optional_incorrect() {
         let s = "width 1\nheight 2\ndelay safdsfsdf\nloop dsfsdf\ncolors dfdfdf\ndatacols dfsfsddf"
             .to_string();
-        let refernce = Header {
+        let reference = Header {
             width: 1,
             height: 2,
             delay: 50,
@@ -613,7 +613,7 @@ mod header_from_string_tests {
         };
         match Header::try_from(s) {
             Ok(result) => {
-                assert_eq!(refernce, result);
+                assert_eq!(reference, result);
             }
             Err(_) => {
                 assert!(false, "Unexpected parcing error");
@@ -637,7 +637,7 @@ mod header_from_string_tests {
     #[test]
     fn datacols() {
         let s = "width 1\nheight 2\ncolors full".to_string();
-        let refernce = Header {
+        let reference = Header {
             width: 1,
             height: 2,
             delay: 50,
@@ -652,14 +652,14 @@ mod header_from_string_tests {
         };
         match Header::try_from(s) {
             Ok(result) => {
-                assert_eq!(refernce, result);
+                assert_eq!(reference, result);
             }
             Err(_) => {
                 assert!(false, "Unexpected parcing error");
             }
         }
         let s = "width 1\nheight 2\ncolors full\ndatacols 0".to_string();
-        let refernce = Header {
+        let reference = Header {
             width: 1,
             height: 2,
             delay: 50,
@@ -674,7 +674,7 @@ mod header_from_string_tests {
         };
         match Header::try_from(s) {
             Ok(result) => {
-                assert_eq!(refernce, result);
+                assert_eq!(reference, result);
             }
             Err(_) => {
                 assert!(false, "Unexpected parcing error");
@@ -686,7 +686,7 @@ mod header_from_string_tests {
         let s = "width    1\nheight    2\ndelay    3\nloop    false\ncolors    full \
         \nutf8   \ndatacols    5\naudio    12345"
             .to_string();
-        let refernce = Header {
+        let reference = Header {
             width: 1,
             height: 2,
             delay: 3,
@@ -701,7 +701,7 @@ mod header_from_string_tests {
         };
         match Header::try_from(s) {
             Ok(result) => {
-                assert_eq!(refernce, result);
+                assert_eq!(reference, result);
             }
             Err(_) => {
                 assert!(false, "Unexpected parcing error");
@@ -712,7 +712,7 @@ mod header_from_string_tests {
     fn extra_params() {
         let s = "width 1   sfdfsdf fdsfd sdf \nheight 2 fds dsfsdf\ndelay 3 fd ff \
         \nloop false   fdfdf  \ncolors full fdfd\nutf8  fdfdf\ndatacols 5 fdfd fd d\naudio 12345 fdfdfdf".to_string();
-        let refernce = Header {
+        let reference = Header {
             width: 1,
             height: 2,
             delay: 3,
@@ -727,7 +727,7 @@ mod header_from_string_tests {
         };
         match Header::try_from(s) {
             Ok(result) => {
-                assert_eq!(refernce, result);
+                assert_eq!(reference, result);
             }
             Err(_) => {
                 assert!(false, "Unexpected parcing error");
