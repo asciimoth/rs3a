@@ -229,6 +229,11 @@ impl Art {
     pub fn fill_color_frame(&mut self, frame: usize, fill: Option<Char>) {
         self.frames.fill_color_frame(frame, fill);
     }
+
+    /// Prints text to specific frame.
+    pub fn print(&mut self, frame: usize, col: usize, row: usize, line: &str, color: Option<Option<Char>>) {
+        self.frames.print(frame, col, row, line, color);
+    }
 }
 
 // Header passthrough

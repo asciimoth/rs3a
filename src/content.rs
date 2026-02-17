@@ -546,6 +546,22 @@ impl Frame {
         }
     }
 
+    /// Prints text to frame.
+    pub fn print(&mut self, col: usize, row: usize, line: &str, color: Option<Option<Char>>) {
+        let mut col = col;
+        for char in line.chars() {
+            if let Ok(char) = Char::new(char) {
+                let mut cell = self.get(col, row, Cell::default());
+                cell.text = char;
+                if let Some(color) = color {
+                    cell.color = color;
+                }
+                self.set(col, row, cell);
+                col += 1;
+            }
+        }
+    }
+
     /// Renders the frame as ANSI escape sequences.
     pub fn ansi(&self, palette: &Palette, color: bool) -> String {
         let mut acum = String::new();
@@ -901,6 +917,13 @@ impl Frames {
     pub fn fill_color_frame(&mut self, frame: usize, fill: Option<Char>) {
         if frame < self.frames() {
             self.frames[frame].fill_color(fill);
+        }
+    }
+
+    /// Prints text to specific frame.
+    pub fn print(&mut self, frame: usize, col: usize, row: usize, line: &str, color: Option<Option<Char>>) {
+        if frame < self.frames() {
+            self.frames[frame].print(col, row, line, color);
         }
     }
 
