@@ -19,3 +19,8 @@ man/*.gz
 /.pre-commit-config.yaml
 
 /.direnv
+
+examples/edited_dna.3a
+examples/dna.svg
+examples/dna.cast
+
