@@ -2,70 +2,89 @@ use crate::error::{Error, Result};
 use std::{fmt::Display, str::FromStr};
 use std::convert::TryFrom;
 
+/// Space character.
 pub const SPACE: Char = Char { char: ' ' };
+/// Underscore character.
 pub const UNDERSCORE: Char = Char { char: '_' };
 
+/// A validated character for use in 3a art.
+/// Only allowed characters (printable, non‑control, etc.) can be contained.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Char {
     pub(crate) char: char,
 }
 
 impl Char {
+    /// Creates a new `Char` after validating the character.
+    /// Returns `Err` if the character is not allowed.
     pub fn new(ch: char) -> Result<Self> {
         check_char(ch).map_or(Err(Error::DisallowedChar(ch.into())), |ok| {
             Ok(Self { char: ok })
         })
     }
+
+    /// Creates a new `Char`; panics if the character is disallowed.
+    /// Prefer `new` or `new_or` for safe construction.
     pub fn new_must(ch: char) -> Char {
         Self::new(ch).unwrap()
     }
+
+    /// Creates a new `Char` if the character is allowed; otherwise returns the default.
     pub fn new_or(ch: char, default: Char) -> Char {
         check_char(ch).map_or(default, |ok| Char { char: ok })
     }
 }
 
+/// Formats Char as a single character.
 impl Display for Char {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.char)
     }
 }
 
+/// Formats Char as a single character.
 impl Into<char> for Char {
     fn into(self) -> char {
         self.char
     }
 }
 
+/// Formats Char as a single character.
 impl Into<char> for &Char {
     fn into(self) -> char {
         self.char
     }
 }
 
+/// Allows conversion to the Unicode code point (u32).
 impl Into<u32> for Char {
     fn into(self) -> u32 {
         self.char.into()
     }
 }
 
+/// Allows conversion to the Unicode code point (u32).
 impl Into<u32> for &Char {
     fn into(self) -> u32 {
         self.char.into()
     }
 }
 
+/// Converts the character to a one‑character `String` without consuming.
 impl Into<String> for Char {
     fn into(self) -> String {
         format!("{}", self)
     }
 }
 
+/// Converts the character to a one‑character `String` without consuming.
 impl Into<String> for &Char {
     fn into(self) -> String {
         format!("{}", self)
     }
 }
 
+/// Parses a string slice containing exactly one character into a `Char`.
 impl FromStr for Char {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
@@ -78,6 +97,7 @@ impl FromStr for Char {
     }
 }
 
+/// Equivalent to `Char::from_str`.
 impl TryFrom<&str> for Char {
     type Error = Error;
     fn try_from(value: &str) -> Result<Self> {
@@ -85,6 +105,7 @@ impl TryFrom<&str> for Char {
     }
 }
 
+/// Equivalent to `Char::from_str`.
 impl TryFrom<String> for Char {
     type Error = Error;
     fn try_from(value: String) -> Result<Self> {
@@ -92,6 +113,9 @@ impl TryFrom<String> for Char {
     }
 }
 
+/// Checks whether a character is allowed in 3a art.
+/// Returns `Some(ch)` if allowed (with some whitespace normalized to space),
+/// or `None` if the character should be rejected.
 pub fn check_char(ch: char) -> Option<char> {
     let cp = ch as u32;
 
@@ -147,6 +171,8 @@ pub fn check_char(ch: char) -> Option<char> {
     Some(ch)
 }
 
+/// Removes disallowed characters from a string and normalizes allowed whitespace.
+/// The result contains only characters that would pass `check_char`.
 pub fn normalize_text(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
 

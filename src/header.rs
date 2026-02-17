@@ -16,51 +16,77 @@ use crate::{
     comments::Comments,
 };
 
+/// Represents the header of a 3a file.
 #[derive(Default, Debug, Clone)]
 pub struct Header {
+    /// Optional title of the artwork.
     pub title: Option<String>,
+    /// Comments associated with the title.
     pub title_comments: Comments,
 
+    /// Map of author names to their associated comments.
     pub authors: OrderMap<String, Comments>,
 
+    /// Map of original author names to their comments.
     pub orig_authors: OrderMap<String, Comments>,
 
+    /// Optional source URL or description.
     pub src: Option<String>,
+    /// Comments associated with the source.
     pub src_comments: Comments,
 
+    /// Optional editor name.
     pub editor: Option<String>,
+    /// Comments associated with the editor.
     pub editor_comments: Comments,
 
+    /// Optional license information.
     pub license: Option<String>,
+    /// Comments associated with the license.
     pub license_comments: Comments,
 
+    /// Optional frame delay for animations.
     pub delay: Option<Delay>,
+    /// Comments associated with the delay.
     pub delay_comments: Comments,
 
+    /// Optional loop flag (true = loop, false = no loop).
     pub loop_flag: Option<bool>,
+    /// Comments associated with the loop flag.
     pub loop_comments: Comments,
 
+    /// Optional preview frame index.
     pub preview: Option<usize>,
+    /// Comments associated with the preview.
     pub preview_comments: Comments,
 
+    /// Optional flag indicating presence of colors.
     pub colors: Option<bool>,
+    /// Comments associated with the colors flag.
     pub colors_comments: Comments,
 
+    /// Color palette mapping characters to color pairs.
     pub palette: Palette,
 
+    /// List of tag lines, each containing a set of tags and comments.
     pub tags: Vec<Tagline>,
 
+    /// Legacy header information for compatibility with older format version.
     pub legacy: Option<LegacyHeaderInfo>,
 
+    /// Extra unrecognized header keys preserved for round‑tripping.
     pub extra_keys: Vec<ExtraHeaderKey>,
 
+    /// Comments that appear after all header keys.
     pub trailing_comments: Comments,
 }
 
 impl Header {
+    /// Removes all tags from the header.
     pub fn remove_all_tags(&mut self) {
         self.tags = Vec::new();
     }
+    /// Removes a specific tag from all tag lines.
     pub fn remove_tag(&mut self, tag: &str) {
         let mut taglines: Vec<Tagline> = Vec::new();
         for tagline in self.tags.iter_mut() {
@@ -71,6 +97,7 @@ impl Header {
         }
         self.tags = taglines;
     }
+    /// Adds a tag to the first tag line, or creates a new tag line if none exist.
     pub fn add_tag(&mut self, tag: &str) {
         let tag = normalize_text(tag);
         if tag.len() < 1 {
@@ -90,6 +117,7 @@ impl Header {
             });
         }
     }
+    /// Returns a set of all tags present in the header.
     pub fn tags(&self) -> HashSet<String> {
         let mut set = HashSet::new();
         for tagline in &self.tags {
@@ -99,6 +127,7 @@ impl Header {
         }
         set
     }
+    /// Checks if the header contains a specific tag.
     pub fn contains_tag(&self, tag: &str) -> bool {
         for tagline in &self.tags {
             if tagline.tags.contains(tag) {
@@ -107,7 +136,8 @@ impl Header {
         }
         false
     }
-
+    /// Removes all comments from the header, including those attached to fields,
+    /// tags, and extra keys.
     pub fn strip_comments(&mut self) {
         self.title_comments = Vec::new();
         self.src_comments = Vec::new();
@@ -138,6 +168,7 @@ impl Header {
 
         self.palette.strip_comments();
     }
+    /// Returns whether colors are enabled, considering the colors flag and legacy mode.
     pub fn get_colors(&self) -> bool {
         if let Some(colors) = self.colors {
             colors
@@ -147,21 +178,27 @@ impl Header {
             self.palette.len() > 0
         }
     }
+    /// Returns the color pair associated with a given character.
     pub fn get_color_map(&self, name: Char) -> ColorPair {
         self.palette.get_color(name)
     }
+    /// Sets the color pair for a character in the palette.
     pub fn set_color_map(&mut self, name: Char, col: ColorPair) {
         self.palette.set_color(name, col)
     }
+    /// Removes the color mapping for a character.
     pub fn remove_color_map(&mut self, name: Char) {
         self.palette.remove_color(name);
     }
+    /// Searches for a character that has the given color pair.
     pub fn search_color_map(&self, col: ColorPair) -> Option<Char> {
         self.palette.search_color(col)
     }
+    /// Checks if the palette contains a mapping for the given character.
     pub fn contains_color(&self, name: Char) -> bool {
         self.palette.contains_color(name)
     }
+    /// Returns a comma‑separated string of all authors (original and current).
     pub fn authors_line(&self) -> String {
         self.orig_authors
             .keys()
@@ -170,6 +207,7 @@ impl Header {
             .collect::<Vec<String>>()
             .join(", ")
     }
+    /// Returns a title line combining the title and authors, if present.
     pub fn title_line(&self) -> String {
         let authors = self.authors_line();
         if let Some(s) = &self.title {
@@ -220,6 +258,8 @@ impl Header {
         l.height = height;
         self.legacy = Some(l);
     }
+    /// Formats the header with explicit control over whether colors exist,
+    /// used for writing.
     pub fn fmt_with_colors(
         &self,
         f: &mut std::fmt::Formatter<'_>,
@@ -368,6 +408,8 @@ impl fmt::Display for Header {
 }
 
 impl Header {
+    /// Reads a header from a buffered reader, automatically detecting modern
+    /// or legacy format.
     pub fn read<R: Read>(lines: &mut io::Lines<BufReader<R>>) -> Result<Self> {
         let fl = lines.next();
         if let Some(Ok(s)) = fl {
@@ -690,15 +732,21 @@ fn color_name_str_to_char(name: Option<&str>) -> Result<Char> {
     Char::from_str(name)
 }
 
+
+/// Represents an unrecognized header key‑value pair with its associated comments.
 #[derive(Debug, Clone)]
 pub struct ExtraHeaderKey {
+    /// The raw line content of the key and value.
     pub line: String,
+    /// Comments attached to this extra key.
     pub comments: Vec<String>,
 }
-
+/// A line containing one or more tags and optional comments.
 #[derive(Default, Debug, Clone)]
 pub struct Tagline {
+    /// Set of tags on this line.
     pub tags: OrderSet<String>,
+    /// Comments associated with this tag line.
     pub comments: Vec<String>,
 }
 
@@ -735,11 +783,16 @@ impl FromStr for Tagline {
     }
 }
 
+/// Legacy color mode
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum LegacyColorMode {
+    /// No colors used.
     None,
+    /// Only foreground colors used.
     FgOnly,
+    /// Only background colors used.
     BgOnly,
+    /// Both foreground and background colors used.
     FgAndBg,
 }
 
@@ -749,6 +802,7 @@ impl Default for LegacyColorMode {
     }
 }
 
+/// Legacy header information for backward compatibility.
 #[derive(Default, Debug, Clone, Copy)]
 pub struct LegacyHeaderInfo {
     pub colors: LegacyColorMode,

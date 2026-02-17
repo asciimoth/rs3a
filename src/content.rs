@@ -12,9 +12,13 @@ use crate::{
     helpers::{escape_html, timing_for_svg},
 };
 
+/// A single cell in a frame, containing a text character
+/// and an optional color character.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Cell {
+    /// The text character displayed in this cell.
     pub text: Char,
+    /// The color character (if any) that maps to a palette color pair.
     pub color: Option<Char>,
 }
 
@@ -28,9 +32,12 @@ impl Default for Cell {
 }
 
 impl Cell {
+    /// Returns true if this cell has a color assigned.
     pub fn color(&self) -> bool {
         self.color != None
     }
+
+    /// Converts the cell's color to a `ColorPair` using the given palette.
     pub fn to_pair(&self, palette: &Palette) -> ColorPair {
         if let Some(color) = self.color {
             palette.get_color(color)
@@ -38,6 +45,8 @@ impl Cell {
             ColorPair::default()
         }
     }
+
+    /// Returns the ANSI escape sequence for this cell.
     pub fn ansi(&self, palette: &Palette) -> String {
         if let Some(color) = self.color {
             format!(
@@ -52,6 +61,7 @@ impl Cell {
     }
 }
 
+/// A single frame of 3a art, consisting of a grid of cells.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Frame {
     pub(crate) color: usize,
@@ -59,6 +69,8 @@ pub struct Frame {
     pub(crate) rows: Vec<Vec<Cell>>,
 }
 
+/// Merges a text frame and a color frame into a single frame.
+/// Returns an error if dimensions mismatch.
 pub fn merge_frames(text: &Frame, color: &Frame) -> Result<Frame> {
     if text.height() != color.height() {
         return Err(Error::HeightMismatch);
@@ -81,6 +93,7 @@ pub fn merge_frames(text: &Frame, color: &Frame) -> Result<Frame> {
 
 // SVG
 impl Frame {
+    /// Generates SVG background rectangles for colored cells.
     pub fn to_svg_frame_bg(&self, palette: &Palette, map: &CSSColorMap, font: &Font) -> String {
         let mut txt = String::new();
         for r in 0..self.height() {
@@ -103,7 +116,8 @@ impl Frame {
         }
         txt
     }
-    // Text with fg colors
+
+    /// Generates SVG text with foreground colors.
     pub fn to_svg_frame_txt_fg(&self, palette: &Palette, map: &CSSColorMap, font: &Font) -> String {
         let mut txt =
             "<text x=\"0\" y=\"0\" xml:space=\"preserve\" dominant-baseline=\"hanging\">\n".into();
@@ -131,7 +145,8 @@ impl Frame {
         txt += "</text>\n";
         txt
     }
-    // Text with no colors
+
+    /// Generates SVG text without colors.
     pub fn to_svg_frame_txt(&self, font: &Font) -> String {
         let mut txt =
             "<text x=\"0\" y=\"0\" xml:space=\"preserve\" dominant-baseline=\"hanging\">\n".into();
@@ -148,6 +163,8 @@ impl Frame {
         txt += "</text>\n";
         txt
     }
+
+    /// Generates SVG for this frame, optionally with colors.
     pub fn to_svg_frame(
         &self,
         colors: bool,
@@ -161,6 +178,8 @@ impl Frame {
             self.to_svg_frame_txt(font)
         }
     }
+
+    /// Generates a complete SVG document for this frame.
     pub fn to_svg(
         &self,
         colors: bool,
@@ -193,6 +212,7 @@ impl Frame {
 }
 
 impl Frame {
+    /// Reads a color-only frame from input lines.
     pub fn read_color<R: Read>(lines: &mut io::Lines<BufReader<R>>) -> Result<Self> {
         let mut width: usize = 0;
         let mut rows: Vec<Vec<Cell>> = Vec::new();
@@ -220,6 +240,7 @@ impl Frame {
         Ok(Self { width, color, rows })
     }
 
+    /// Reads a text-only frame from input lines.
     pub fn read_text<R: Read>(lines: &mut io::Lines<BufReader<R>>) -> Result<Self> {
         let mut width: usize = 0;
         let mut rows: Vec<Vec<Cell>> = Vec::new();
@@ -249,6 +270,7 @@ impl Frame {
         })
     }
 
+    /// Reads a combined (text+color) frame from input lines.
     pub fn read_both<R: Read>(lines: &mut io::Lines<BufReader<R>>) -> Result<Self> {
         let mut width: usize = 0;
         let mut rows: Vec<Vec<Cell>> = Vec::new();
@@ -283,15 +305,22 @@ impl Frame {
 }
 
 impl Frame {
+    /// Returns true if the frame contains any color cells.
     pub fn color(&self) -> bool {
         self.color > 0
     }
+
+    /// Returns the width of the frame in cells.
     pub fn width(&self) -> usize {
         self.width
     }
+
+    /// Returns the height of the frame in cells.
     pub fn height(&self) -> usize {
         self.rows.len()
     }
+
+    /// Shifts all rows right by `cols`, filling new cells with `fill`.
     pub fn shift_right(&mut self, cols: usize, fill: Cell) {
         let h = self.height();
         let w = self.width();
@@ -307,6 +336,8 @@ impl Frame {
             }
         }
     }
+
+    /// Shifts all rows left by `cols`, filling vacated cells with `fill`.
     pub fn shift_left(&mut self, cols: usize, fill: Cell) {
         let h = self.height();
         let w = self.width();
@@ -322,6 +353,8 @@ impl Frame {
             }
         }
     }
+
+    /// Shifts all columns down by `rows`, filling new cells with `fill`.
     pub fn shift_down(&mut self, rows: usize, fill: Cell) {
         let h = self.height();
         if h == 0 {
@@ -334,6 +367,8 @@ impl Frame {
             self.rows[r] = vec![fill; self.width()];
         }
     }
+
+    /// Shifts all columns up by `rows`, filling vacated cells with `fill`.
     pub fn shift_up(&mut self, rows: usize, fill: Cell) {
         let h = self.height();
         if h == 0 {
@@ -346,6 +381,8 @@ impl Frame {
             self.rows.rotate_left(rows);
         }
     }
+
+    /// Fills a rectangular area defined by column and row iterators with `new` cell.
     pub fn fill_area<C, R>(&mut self, columns: C, rows: R, new: Cell)
     where
         C: IntoIterator<Item = usize>,
@@ -358,6 +395,8 @@ impl Frame {
             }
         }
     }
+
+    /// Sets the cell at (column, row) to `new`.
     pub fn set(&mut self, column: usize, row: usize, new: Cell) {
         if column < self.width() && row < self.height() {
             let old = self.rows[row][column];
@@ -365,6 +404,8 @@ impl Frame {
             self.adjust_color(old, new);
         }
     }
+
+    /// Gets the cell at (column, row), returning `default` if out of bounds.
     pub fn get(&self, column: usize, row: usize, default: Cell) -> Cell {
         if column < self.width() && row < self.height() {
             self.rows[row][column]
@@ -372,24 +413,34 @@ impl Frame {
             default
         }
     }
+
+    /// Adjusts frame size to at least `width` and `height`, filling new cells with `fill`.
     pub fn adjust(&mut self, width: usize, height: usize, fill: Cell) {
         self.adjust_width(width, fill);
         self.adjust_height(height, fill);
     }
+
+    /// Adjusts frame width to at least `width`.
     pub fn adjust_width(&mut self, width: usize, fill: Cell) {
         if width > self.width() {
             self.resize_width(width, fill);
         }
     }
+
+    /// Adjusts frame height to at least `height`.
     pub fn adjust_height(&mut self, height: usize, fill: Cell) {
         if height > self.height() {
             self.resize_height(height, fill);
         }
     }
+
+    /// Resizes frame to exact `width` and `height`, filling new cells with `fill`.
     pub fn resize(&mut self, width: usize, height: usize, fill: Cell) {
         self.resize_width(width, fill);
         self.resize_height(height, fill);
     }
+
+    /// Resizes width to exact `width`.
     pub fn resize_width(&mut self, width: usize, fill: Cell) {
         if self.width() != width {
             for row in &mut self.rows {
@@ -398,12 +449,16 @@ impl Frame {
             self.width = width;
         }
     }
+
+    /// Resizes height to exact `height`.
     pub fn resize_height(&mut self, height: usize, fill: Cell) {
         if self.height() != height {
             let fill_row = vec![fill; self.width()];
             self.rows.resize(height, fill_row);
         }
     }
+
+    /// Checks if the frame contains the given cell.
     pub fn contains(&self, cell: Cell) -> bool {
         for row in &self.rows {
             for c in row {
@@ -414,6 +469,8 @@ impl Frame {
         }
         false
     }
+
+    /// Checks if the frame contains the given text character.
     pub fn contains_text(&self, ch: Char) -> bool {
         for row in &self.rows {
             for c in row {
@@ -424,6 +481,8 @@ impl Frame {
         }
         false
     }
+
+    /// Checks if the frame contains the given color character.
     pub fn contains_color(&self, col: Char) -> bool {
         for row in &self.rows {
             for c in row {
@@ -434,10 +493,14 @@ impl Frame {
         }
         false
     }
+
+    /// Clears the frame: sets all text to space and color to default.
     pub fn clean(&mut self) {
         let color = if self.color() { Some(UNDERSCORE) } else { None };
         self.fill(Cell { text: SPACE, color });
     }
+
+    /// Fills the entire frame with the given cell.
     pub fn fill(&mut self, fill: Cell) {
         self.color = if fill.color() {
             self.width() * self.height()
@@ -450,6 +513,8 @@ impl Frame {
             }
         }
     }
+
+    /// Fills all text cells with the given character.
     pub fn fill_text(&mut self, fill: Char) {
         for row in &mut self.rows {
             for cell in row {
@@ -457,6 +522,8 @@ impl Frame {
             }
         }
     }
+
+    /// Fills all color cells with the given character (or None).
     pub fn fill_color(&mut self, fill: Option<Char>) {
         self.color = if fill == None {
             0
@@ -469,6 +536,7 @@ impl Frame {
             }
         }
     }
+
     fn adjust_color(&mut self, old: Cell, new: Cell) {
         match (old.color(), new.color()) {
             (true, true) => {}
@@ -477,6 +545,8 @@ impl Frame {
             (false, false) => {}
         }
     }
+
+    /// Renders the frame as ANSI escape sequences.
     pub fn ansi(&self, palette: &Palette, color: bool) -> String {
         let mut acum = String::new();
         for r in 0..self.height() {
@@ -506,6 +576,8 @@ impl Frame {
         }
         acum
     }
+
+    /// Creates a new frame of given dimensions filled with `fill`.
     pub fn new(width: usize, height: usize, fill: Cell) -> Self {
         Self {
             color: if fill.color() { width * height } else { 0 },
@@ -513,6 +585,8 @@ impl Frame {
             rows: vec![vec![fill; width]; height],
         }
     }
+
+    /// Formats the frame's text channel.
     pub fn fmt_text(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.rows {
             let mut acum = String::new();
@@ -523,6 +597,8 @@ impl Frame {
         }
         Ok(())
     }
+
+    /// Formats the frame's color channel.
     pub fn fmt_colors(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.rows {
             let mut acum = String::new();
@@ -533,6 +609,8 @@ impl Frame {
         }
         Ok(())
     }
+
+    /// Formats both text and color channels concatenated.
     pub fn fmt_both(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.rows {
             let mut acum = String::new();
@@ -546,6 +624,8 @@ impl Frame {
         }
         Ok(())
     }
+
+    /// Formats the frame with optional color inclusion.
     pub fn fmt_with_colors(
         &self,
         f: &mut std::fmt::Formatter<'_>,
@@ -569,12 +649,14 @@ impl Frame {
     }
 }
 
+/// Displays the frame in combined text+color format.
 impl fmt::Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.fmt_both(f)
     }
 }
 
+/// A collection of frames forming an animation, with optional pinned channels.
 #[derive(Default, Debug, Clone)]
 pub struct Frames {
     pub(crate) text_pin: Option<Frame>,
@@ -585,6 +667,7 @@ pub struct Frames {
 }
 
 impl Frames {
+    /// Creates a new set of `frames` frames with given dimensions, each filled with `fill`.
     pub fn new(frames: usize, width: usize, height: usize, fill: Cell) -> Self {
         let mut ret = Self {
             text_pin: None,
@@ -598,11 +681,15 @@ impl Frames {
         });
         ret
     }
+
+    /// Sets a cell in a specific frame.
     pub fn set(&mut self, frame: usize, column: usize, row: usize, new: Cell) {
         if frame < self.frames() {
             self.frames[frame].set(column, row, new);
         }
     }
+
+    /// Gets a cell from a specific frame, with default if out of bounds.
     pub fn get(&self, frame: usize, column: usize, row: usize, default: Cell) -> Cell {
         if frame < self.frames() {
             self.frames[frame].get(column, row, default)
@@ -610,6 +697,8 @@ impl Frames {
             default
         }
     }
+
+    /// Ensures that the given frame index exists, extending if necessary.
     pub fn make_sure_frame_exist(&mut self, frame: usize) {
         if frame >= self.frames() {
             if self.frames() == 0 {
@@ -624,51 +713,70 @@ impl Frames {
             }
         }
     }
+
+    /// Duplicates the given frame, inserting the copy before it.
     pub fn dup_frame(&mut self, frame: usize) {
         self.make_sure_frame_exist(frame);
         self.frames.insert(frame, self.frames[frame].clone());
     }
+
+    /// Shifts a specific frame right.
     pub fn shift_right_frame(&mut self, frame: usize, cols: usize, fill: Cell) {
         if frame < self.frames() {
             self.frames[frame].shift_right(cols, fill);
         }
     }
+
+    /// Shifts all frames right.
     pub fn shift_right(&mut self, cols: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.shift_right(cols, fill);
         }
     }
+
+    /// Shifts a specific frame left.
     pub fn shift_left_frame(&mut self, frame: usize, cols: usize, fill: Cell) {
         if frame < self.frames() {
             self.frames[frame].shift_left(cols, fill);
         }
     }
+
+    /// Shifts all frames left.
     pub fn shift_left(&mut self, cols: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.shift_left(cols, fill);
         }
     }
+
+    /// Shifts a specific frame up.
     pub fn shift_up_frame(&mut self, frame: usize, rows: usize, fill: Cell) {
         if frame < self.frames() {
             self.frames[frame].shift_up(rows, fill);
         }
     }
+
+    /// Shifts all frames up.
     pub fn shift_up(&mut self, rows: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.shift_up(rows, fill);
         }
     }
+
+    /// Shifts a specific frame down.
     pub fn shift_down_frame(&mut self, frame: usize, rows: usize, fill: Cell) {
         if frame < self.frames() {
             self.frames[frame].shift_down(rows, fill);
         }
     }
+
+    /// Shifts all frames down.
     pub fn shift_down(&mut self, rows: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.shift_down(rows, fill);
         }
     }
 
+    /// Fills an area in a specific frame.
     pub fn fill_area_frame<C, R>(&mut self, frame: usize, columns: C, rows: R, new: Cell)
     where
         C: IntoIterator<Item = usize>,
@@ -677,6 +785,7 @@ impl Frames {
         self.frames[frame].fill_area(columns, rows, new);
     }
 
+    /// Fills an area in all frames.
     pub fn fill_area<C, R>(&mut self, columns: C, rows: R, new: Cell)
     where
         C: IntoIterator<Item = usize>,
@@ -688,6 +797,8 @@ impl Frames {
             frame.fill_area(columns_vec.clone(), rows_vec.clone(), new);
         }
     }
+
+    /// Adjusts all frames to at least `width` and `height`.
     pub fn adjust(&mut self, width: usize, height: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.adjust(width, height, fill);
@@ -695,18 +806,24 @@ impl Frames {
         self.width = width;
         self.height = height;
     }
+
+    /// Adjusts width of all frames.
     pub fn adjust_width(&mut self, width: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.adjust_width(width, fill);
         }
         self.width = width;
     }
+
+    /// Adjusts height of all frames.
     pub fn adjust_height(&mut self, height: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.adjust_height(height, fill);
         }
         self.height = height;
     }
+
+    /// Resizes all frames to exact dimensions.
     pub fn resize(&mut self, width: usize, height: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.resize(width, height, fill);
@@ -714,63 +831,87 @@ impl Frames {
         self.width = width;
         self.height = height;
     }
+
+    /// Resizes width of all frames.
     pub fn resize_width(&mut self, width: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.resize_width(width, fill);
         }
         self.width = width;
     }
+
+    /// Resizes height of all frames.
     pub fn resize_height(&mut self, height: usize, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.resize_height(height, fill);
         }
         self.height = height;
     }
+
+    /// Clears all frames (text to space, color to underscore if any).
     pub fn clean(&mut self) {
         for frame in self.frames.iter_mut() {
             frame.clean();
         }
     }
+
+    /// Clears a specific frame.
     pub fn clean_frame(&mut self, frame: usize) {
         if frame < self.frames() {
             self.frames[frame].clean();
         }
     }
+
+    /// Fills all frames with the given cell.
     pub fn fill(&mut self, fill: Cell) {
         for frame in self.frames.iter_mut() {
             frame.fill(fill);
         }
     }
+
+    /// Fills a specific frame with the given cell.
     pub fn fill_frame(&mut self, frame: usize, fill: Cell) {
         if frame < self.frames() {
             self.frames[frame].fill(fill);
         }
     }
+
+    /// Fills text of all frames with the given character.
     pub fn fill_text(&mut self, fill: Char) {
         for frame in self.frames.iter_mut() {
             frame.fill_text(fill);
         }
     }
+
+    /// Fills text of a specific frame with the given character.
     pub fn fill_text_frame(&mut self, frame: usize, fill: Char) {
         if frame < self.frames() {
             self.frames[frame].fill_text(fill);
         }
     }
+
+    /// Fills color of all frames with the given character (or None).
     pub fn fill_color(&mut self, fill: Option<Char>) {
         for frame in self.frames.iter_mut() {
             frame.fill_color(fill);
         }
     }
+
+    /// Fills color of a specific frame with the given character (or None).
     pub fn fill_color_frame(&mut self, frame: usize, fill: Option<Char>) {
         if frame < self.frames() {
             self.frames[frame].fill_color(fill);
         }
     }
+
+    /// Removes a specific frame.
     pub fn remove_frame(&mut self, frame: usize) {
         if frame < self.frames.len() {
             self.frames.remove(frame);
         }
     }
+
+    /// Checks if any frame contains the given cell.
     pub fn contains(&self, cell: Cell) -> bool {
         for frame in &self.frames {
             if frame.contains(cell) {
@@ -779,6 +920,8 @@ impl Frames {
         }
         false
     }
+
+    /// Checks if any frame contains the given color character.
     pub fn contains_color(&self, name: Char) -> bool {
         for frame in &self.frames {
             if frame.contains_color(name) {
@@ -787,6 +930,8 @@ impl Frames {
         }
         false
     }
+
+    /// Checks if any frame contains the given text character.
     pub fn contains_text(&self, ch: Char) -> bool {
         for frame in &self.frames {
             if frame.contains_color(ch) {
@@ -795,6 +940,8 @@ impl Frames {
         }
         false
     }
+
+    /// Pins the color channel from the given frame to all frames.
     pub fn pin_color(&mut self, frame: usize) -> Result<()> {
         if frame >= self.frames.len() {
             return Ok(());
@@ -802,6 +949,8 @@ impl Frames {
         self.color_pin = Some(self.frames[frame].clone());
         self.merge()
     }
+
+    /// Pins the text channel from the given frame to all frames.
     pub fn pin_text(&mut self, frame: usize) -> Result<()> {
         if frame >= self.frames.len() {
             return Ok(());
@@ -809,6 +958,8 @@ impl Frames {
         self.text_pin = Some(self.frames[frame].clone());
         self.merge()
     }
+
+    /// Returns a vector frames converted to text with ANCI escape codes.
     pub fn to_ansi_frames(&self, palette: &Palette, color: bool) -> Vec<String> {
         let mut frames = Vec::new();
         for frame in &self.frames {
@@ -816,15 +967,23 @@ impl Frames {
         }
         frames
     }
+
+    /// Returns the number of frames.
     pub fn frames(&self) -> usize {
         self.frames.len()
     }
+
+    /// Returns the width of the frames.
     pub fn width(&self) -> usize {
         self.width
     }
+
+    /// Returns the height of the frames.
     pub fn height(&self) -> usize {
         self.height
     }
+
+    /// Returns true if any frame contains color.
     pub fn color(&self) -> bool {
         for frame in &self.frames {
             if frame.color() {
@@ -833,6 +992,8 @@ impl Frames {
         }
         false
     }
+
+    /// Returns whether text and color are pinned across frames.
     pub fn pinned(&self) -> (bool, bool) {
         if self.frames.len() < 2 {
             return (false, false);
@@ -865,6 +1026,8 @@ impl Frames {
         }
         (text_pinned, color_pinned)
     }
+
+    /// Computes total duration from delays.
     pub fn duration(&self, delays: &Delay) -> usize {
         let mut dur = 0;
         for f in 0..self.frames() {
@@ -872,6 +1035,8 @@ impl Frames {
         }
         dur
     }
+
+    /// Generates an animated SVG from all frames.
     pub fn to_svg_frames(
         &self,
         colors: bool,
@@ -1152,6 +1317,7 @@ impl Frames {
         Ok(frames)
     }
 
+    /// Formats the body with only text channels.
     pub fn fmt_body_text(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "@body")?;
         for frame in &self.frames {
@@ -1160,6 +1326,8 @@ impl Frames {
         }
         Ok(())
     }
+
+    /// Formats the body with only color channels.
     pub fn fmt_body_colors(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "@body")?;
         for frame in &self.frames {
@@ -1168,6 +1336,8 @@ impl Frames {
         }
         Ok(())
     }
+
+    /// Formats the body with combined text+color channels.
     pub fn fmt_body_both(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "@body")?;
         for frame in &self.frames {
@@ -1176,6 +1346,8 @@ impl Frames {
         }
         Ok(())
     }
+
+    /// Formats the pinned text channel.
     pub fn fmt_pinned_text(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "@text-pin")?;
         if let Some(frame) = &self.frames.first() {
@@ -1184,6 +1356,8 @@ impl Frames {
         }
         Ok(())
     }
+
+    /// Formats the pinned color channel.
     pub fn fmt_pinned_colors(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "@color-pin")?;
         if let Some(frame) = &self.frames.first() {
@@ -1192,6 +1366,8 @@ impl Frames {
         }
         Ok(())
     }
+
+    /// Formats with optional color inclusion, using pins if possible.
     pub fn fmt_with_color(&self, f: &mut std::fmt::Formatter<'_>, color: bool) -> std::fmt::Result {
         if color {
             let (text_pinned, colors_pinned) = self.pinned();
@@ -1210,6 +1386,7 @@ impl Frames {
     }
 }
 
+/// Displays the frames using optimal format (with pins if possible).
 impl fmt::Display for Frames {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.fmt_with_color(f, self.color())

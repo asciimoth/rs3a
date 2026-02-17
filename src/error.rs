@@ -3,43 +3,68 @@ use std::{num::ParseIntError, sync::Arc};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Errors that can occur when parsing or processing 3a format.
 #[derive(Debug, Clone)]
 pub enum Error {
+    /// Failed to parse delay line.
     DelayLineParsing(String),
+    /// No delay values found in delay line.
     DelayLineVoid(String),
+    /// Failed to parse global delay value.
     GlobalDelayParsing(String, ParseIntError),
+    /// Global delay defined multiple times.
     GlobalDelayDup(String),
+    /// Failed to parse per-frame delay value.
     PerFrameDelayParsing(String, ParseIntError),
+    /// Delay for a specific frame defined multiple times.
     PerFrameDelayDup(usize, String),
 
+    /// Failed to parse color string.
     ColorParsing(String),
 
+    /// Duplicate color name found.
     ColorDuplicate(String, String),
 
+    /// Header key missing value.
     HeaderKeyWithoutValue(String),
+    /// Duplicate header key.
     HeaderKeyDup(String),
+    /// Invalid header flag value (must be 'yes' or 'no').
     HeaderFlagKey(String),
 
+    /// Failed to parse preview value.
     PreviewParsing(String, ParseIntError),
 
+    /// Invalid color name.
     ColorName(String),
+    /// Duplicate color mapping.
     ColorMapDup(String),
 
+    /// Mismatch in width between art components.
     WidthMismatch,
+    /// Mismatch in height between art components.
     HeightMismatch,
+    /// Mismatch in frame count between channels.
     FramesMismatch,
 
+    /// Mismatch between header color info and body.
     ColorsMismatch,
 
+    /// Text channel contains zero frames.
     VoidTextChannel,
 
+    /// Duplicate block title.
     BlockDup(String),
 
+    /// Expected block title but got something else.
     BlockExpected(String),
 
+    /// Character with disallowed code point.
     DisallowedChar(u32),
+    /// Failed to convert string to single character (invalid length).
     StrToCharConversion(usize),
 
+    /// I/O error occurred.
     Io(Arc<std::io::Error>),
 }
 

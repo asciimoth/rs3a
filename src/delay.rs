@@ -3,32 +3,32 @@ use std::{collections::HashMap, str::FromStr};
 
 use crate::error::{Error, Result};
 
+/// Frame delay configuration for animations.
+/// Contains a global delay and optional per-frame overrides.
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct Delay {
+    /// Global delay in milliseconds, applied to all frames unless overridden.
+    /// A value of 0 is interpreted as the default (50ms).
     pub global: usize,
+    /// Per-frame delay overrides, keyed by frame index (0-based).
     pub per_frame: HashMap<usize, usize>,
 }
 
 impl Delay {
-    pub fn to_vec_delays(&self, frames: usize) -> Vec<usize> {
-        let mut delays = vec![];
-        for f in 0..frames {
-            delays.push(self.get_frame(f));
-        }
-        delays
-    }
+    /// Returns the effective global delay, defaulting to 50ms if set to 0.
     pub fn get_global(&self) -> usize {
         if self.global == 0 { 50 } else { self.global }
     }
+    /// Returns the effective delay for a specific frame, falling back to global.
     pub fn get_frame(&self, frame: usize) -> usize {
         let d = self.per_frame.get(&frame).unwrap_or(&self.global).clone();
         if d == 0 { 50 } else { d }
     }
-    // Use global == 0 to set global delay to default one (50 milis)
+    /// Sets the global delay. If `global` is 0, it is interpreted as the default (50ms).
     pub fn set_global(&mut self, global: usize) {
         self.global = if global == 0 { 50 } else { global };
     }
-    // Use zero delay to remove value
+    /// Sets a per-frame delay override. If `delay` is 0, the override is removed.
     pub fn set_frame(&mut self, frame: usize, delay: usize) {
         if delay == 0 {
             self.per_frame.remove(&frame);
@@ -36,9 +36,10 @@ impl Delay {
             self.per_frame.insert(frame, delay);
         }
     }
-    // Remove all per-frame values for frames >= count
-    // If there is a same per frame value for all frames < count, set global to it
-    // Remove per-frame values eqalled to global
+    /// Optimizes the delay map after changing the total frame count.
+    /// - Removes overrides for frames beyond `count`.
+    /// - If all remaining frames have the same delay, promotes it to global.
+    /// - Removes overrides that equal the new global delay.
     pub fn set_frames(&mut self, count: usize) {
         let mut global = self.get_global();
         let mut per_frame = HashMap::<usize, usize>::new();
@@ -62,8 +63,19 @@ impl Delay {
         self.global = global;
         self.per_frame = per_frame;
     }
+    /// Returns a vector of delays for all frames from 0 to `frames-1`.
+    /// Each entry is the effective delay for that frame.
+    pub fn to_vec_delays(&self, frames: usize) -> Vec<usize> {
+        let mut delays = vec![];
+        for f in 0..frames {
+            delays.push(self.get_frame(f));
+        }
+        delays
+    }
 }
 
+/// Formats the delay as a string: global value followed by space-separated
+/// "frame:delay" pairs.
 impl fmt::Display for Delay {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.get_global())?;
@@ -76,6 +88,8 @@ impl fmt::Display for Delay {
     }
 }
 
+/// Parses a delay string of the form "global [frame:delay ...]".
+/// Returns an error if the format is invalid or duplicates exist.
 impl FromStr for Delay {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {

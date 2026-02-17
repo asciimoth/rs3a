@@ -5,6 +5,7 @@ use ordermap::OrderMap;
 
 use crate::{chars::Char, comments::Comments, error::Error};
 
+/// The four-bit ANSI color set.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Color4 {
     Black,
@@ -17,15 +18,22 @@ pub enum Color4 {
     White,
 }
 
+
+/// Represents a color in the 3a format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Color {
-    None,                 // Reset fg/bg to terminal default
-    Color4(Color4, bool), // Color, Brightness
-    Color256(u8),         // ANSI 256-color id
+    /// No color / terminal default color
+    None,
+    /// 4-bit color with brightness
+    Color4(Color4, bool),
+    /// 256-color
+    Color256(u8),
+    // RGB
     RGB(u8, u8, u8),
 }
 
 impl Color {
+    /// Creates a color from a built-in character mapping (0-9a-f) to 4-bit colors.
     pub fn from_char_builtin(c: Char) -> Self {
         match c.char {
             '0' => Self::Color4(Color4::Black, false),
@@ -51,12 +59,15 @@ impl Color {
     }
 }
 
+/// Returns the default color (None).
 impl Default for Color {
     fn default() -> Self {
         Self::None
     }
 }
 
+/// Parses a color from a string: color names ("red", "bright-green"),
+/// 256-color index (0-255), or hex RGB ("rrggbb").
 impl FromStr for Color {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -99,6 +110,7 @@ impl FromStr for Color {
     }
 }
 
+/// Formats the color as a string (color name, index, or hex RGB).
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -179,6 +191,7 @@ impl Color {
     }
 }
 
+/// A pair of foreground and background colors.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ColorPair {
     pub fg: Color,
@@ -186,15 +199,18 @@ pub struct ColorPair {
 }
 
 impl ColorPair {
+    /// Returns a new ColorPair with foreground and background swapped.
     pub fn invert(&self) -> Self {
         Self {
             fg: self.bg,
             bg: self.fg,
         }
     }
+    /// Returns combined ANSI escape sequences for both foreground and background colors.
     pub fn to_ansi(&self) -> String {
         return self.fg.to_ansi(true) + self.bg.to_ansi(false).as_str();
     }
+    /// Returns ANSI escape sequences only if this pair differs from the previous one; otherwise returns empty string.
     pub fn to_ansi_rel(&self, prev: &Option<Self>) -> String {
         if Some(*self) != *prev {
             self.to_ansi()
@@ -202,6 +218,7 @@ impl ColorPair {
             "".into()
         }
     }
+    /// Creates a color pair from a built-in character mapping.
     pub fn from_char_builtin(c: Char) -> Self {
         Self {
             fg: Color::from_char_builtin(c),
@@ -210,6 +227,7 @@ impl ColorPair {
     }
 }
 
+/// Formats the color pair as "fg:color bg:color" or just one if the other is None.
 impl fmt::Display for ColorPair {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.fg == Color::None && self.bg == Color::None {
@@ -225,6 +243,7 @@ impl fmt::Display for ColorPair {
     }
 }
 
+/// Parses a color pair from a string like "fg:red bg:blue".
 impl FromStr for ColorPair {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -258,13 +277,15 @@ impl FromStr for ColorPair {
     }
 }
 
+
+/// A mapping from character codes to color pairs, with optional comments per entry.
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Palette {
-    // name -> colors, comments
     pub palette: OrderMap<Char, (ColorPair, Comments)>,
 }
 
 impl Palette {
+    /// Removes all comments from the palette entries, keeping only color pairs.
     pub fn strip_comments(&mut self) {
         let keys: Vec<Char> = self.palette.keys().map(|k| k.clone()).collect();
         for key in keys {
@@ -273,16 +294,11 @@ impl Palette {
             }
         }
     }
+    /// Returns the number of entries in the palette.
     pub fn len(&self) -> usize {
         self.palette.len()
     }
-    pub fn search_or_add_color(&mut self, col: ColorPair) -> Char {
-        if let Some(name) = self.search_color(col) {
-            name
-        } else {
-            todo!()
-        }
-    }
+    /// Searches for a color pair in the palette and returns its character code if found.
     pub fn search_color(&self, col: ColorPair) -> Option<Char> {
         for (k, v) in &self.palette {
             if v.0 == col {
@@ -291,9 +307,11 @@ impl Palette {
         }
         None
     }
+    /// Checks if a character code is defined in the palette.
     pub fn contains_color(&self, name: Char) -> bool {
         self.palette.contains_key(&name)
     }
+    /// Returns the color pair for a character code, falling back to built-in mapping if not found.
     pub fn get_color(&self, name: Char) -> ColorPair {
         if let Some((pair, _)) = self.palette.get(&name) {
             *pair
@@ -301,6 +319,8 @@ impl Palette {
             ColorPair::from_char_builtin(name)
         }
     }
+    /// Sets the color pair for a character code;
+    /// if it matches the built-in mapping, the entry is removed.
     pub fn set_color(&mut self, name: Char, col: ColorPair) {
         if ColorPair::from_char_builtin(name) == col {
             self.palette.remove(&name);
@@ -308,6 +328,7 @@ impl Palette {
             self.palette.insert(name, (col, Vec::new()));
         }
     }
+    /// Removes the entry for a character code from the palette.
     pub fn remove_color(&mut self, name: Char) {
         self.palette.remove(&name);
     }
@@ -325,6 +346,8 @@ impl Palette {
     }
 }
 
+/// Formats the palette as "col <char> <colorpair>" lines,
+/// with optional comment lines prefixed by ";;".
 impl fmt::Display for Palette {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (name, mapping) in &self.palette {
@@ -337,12 +360,14 @@ impl fmt::Display for Palette {
     }
 }
 
+/// A mapping from colors to CSS color strings, used for SVG output.
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct CSSColorMap {
     pub map: HashMap<(Color, bool), String>,
 }
 
 impl CSSColorMap {
+    /// Returns the CSS color string for an optional color and foreground flag; uses default if None.
     pub fn map_opt(&self, color: Option<Color>, foreground: bool) -> String {
         let color = if let Some(color) = color {
             color
@@ -351,6 +376,7 @@ impl CSSColorMap {
         };
         self.map(color, foreground)
     }
+    /// Returns the CSS color string for a color and foreground flag; uses built-in defaults if not mapped
     pub fn map(&self, color: Color, foreground: bool) -> String {
         if let Some(s) = self.map.get(&(color, foreground)) {
             s.chars()
