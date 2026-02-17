@@ -1,11 +1,13 @@
 [package]
 name = "rs3a"
-version = "1.0.6"
+version = "2.0.0"
 edition = "2018"
-authors = ["DomesticMoth"]
-description = "Lib for reading and writing 3a format"
-repository = "https://github.com/DomesticMoth/rs3a"
-categories = ["text-processing", "parser-implementations", "parsing"]
+authors = ["asciimoth"]
+description = "Animated ascii art rust library"
+repository = "https://github.com/asciimoth/rs3a"
+documentation = "https://docs.rs/rs3a"
+keywords = ["3a", "animated-ascii-art", "text", "ascii", "ascii-art"]
+categories = ["encoding", "parser-implementations"]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 

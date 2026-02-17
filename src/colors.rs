@@ -346,7 +346,7 @@ impl Palette {
     }
 }
 
-/// Formats the palette as "col <char> <colorpair>" lines,
+/// Formats the palette as `col <char> <colorpair>` lines,
 /// with optional comment lines prefixed by ";;".
 impl fmt::Display for Palette {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
