@@ -63,6 +63,7 @@ fn main() {
 
 ## TODO
 - art optimisation
+- SVG render optimisation
 - conversion to
     - image
     - gif
