@@ -222,12 +222,12 @@ impl Frame {
             if line.is_empty() {
                 break;
             }
-            if width != 0 && line.len() != width {
+            let full_line: Vec<char> = line.chars().collect();
+            if width != 0 && full_line.len() != width {
                 return Err(Error::WidthMismatch);
             }
-            width = line.len();
+            width = full_line.len();
             let mut row: Vec<Cell> = Vec::new();
-            let full_line: Vec<char> = line.chars().collect();
             for c in full_line {
                 row.push(Cell {
                     text: SPACE,
@@ -249,12 +249,12 @@ impl Frame {
             if line.is_empty() {
                 break;
             }
-            if width != 0 && line.len() != width {
+            let full_line: Vec<char> = line.chars().collect();
+            if width != 0 && full_line.len() != width {
                 return Err(Error::WidthMismatch);
             }
-            width = line.len();
+            width = full_line.len();
             let mut row: Vec<Cell> = Vec::new();
-            let full_line: Vec<char> = line.chars().collect();
             for c in full_line {
                 row.push(Cell {
                     text: Char::new_must(c),
@@ -280,12 +280,12 @@ impl Frame {
             if line.is_empty() {
                 break;
             }
-            if width != 0 && line.len() / 2 != width {
+            let full_line: Vec<char> = line.chars().collect();
+            if width != 0 && full_line.len() / 2 != width {
                 return Err(Error::WidthMismatch);
             }
-            width = line.len() / 2;
+            width = full_line.len() / 2;
             let mut row: Vec<Cell> = Vec::new();
-            let full_line: Vec<char> = line.chars().collect();
             let text = &full_line[..full_line.len() / 2];
             let colors = &full_line[full_line.len() / 2..];
             if text.len() != colors.len() {
