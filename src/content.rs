@@ -2,14 +2,14 @@ use core::fmt;
 use std::io::{self, BufReader, Read};
 
 use crate::{
-    Color,
-    chars::{Char, SPACE, UNDERSCORE, normalize_text},
-    colors::{CSSColorMap, ColorPair, Palette, trans_color},
+    chars::{normalize_text, Char, SPACE, UNDERSCORE},
+    colors::{trans_color, CSSColorMap, ColorPair, Palette},
     delay::Delay,
     error::{Error, Result},
     font::Font,
     header::{Header, LegacyColorMode, LegacyHeaderInfo},
     helpers::{escape_html, timing_for_svg},
+    Color,
 };
 
 /// A single cell in a frame, containing a text character
@@ -157,7 +157,12 @@ impl Frame {
             }
             let x = font.fg_offset_x;
             let y = font.height * r + font.fg_offset_y;
-            let row = format!("<tspan x=\"{}\" y=\"{}\">{}</tspan>\n", x, y, row);
+            let row = format!(
+                "<tspan x=\"{}\" y=\"{}\">{}</tspan>\n",
+                x,
+                y,
+                escape_html(&row)
+            );
             txt += row.as_str();
         }
         txt += "</text>\n";
@@ -921,7 +926,14 @@ impl Frames {
     }
 
     /// Prints text to specific frame.
-    pub fn print(&mut self, frame: usize, col: usize, row: usize, line: &str, color: Option<Option<Char>>) {
+    pub fn print(
+        &mut self,
+        frame: usize,
+        col: usize,
+        row: usize,
+        line: &str,
+        color: Option<Option<Char>>,
+    ) {
         if frame < self.frames() {
             self.frames[frame].print(col, row, line, color);
         }
