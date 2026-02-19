@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, str::FromStr, usize};
 
 use ordermap::OrderMap;
 
@@ -17,7 +17,6 @@ pub enum Color4 {
     Cyan,
     White,
 }
-
 
 /// Represents a color in the 3a format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -55,6 +54,17 @@ impl Color {
             'f' => Self::Color4(Color4::White, true),
 
             _ => Self::None,
+        }
+    }
+
+    /// Converts RGB colors to nearest Color256 colors.
+    /// Leaves None, Color4, and Color256 as is.
+    pub fn to_xterm256(self) -> Self {
+        match self {
+            Self::None => Self::None,
+            Self::Color4(c, b) => Self::Color4(c, b),
+            Self::Color256(c) => Self::Color256(c),
+            Self::RGB(r, g, b) => Self::Color256(rgb_to_xterm256(r, g, b)),
         }
     }
 }
@@ -276,7 +286,6 @@ impl FromStr for ColorPair {
         Ok(pair)
     }
 }
-
 
 /// A mapping from character codes to color pairs, with optional comments per entry.
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
@@ -529,5 +538,50 @@ pub(crate) fn trans_color(leacy: char) -> char {
         'e' => 'b',
         'f' => 'f',
         _ => '_',
+    }
+}
+
+/// Map RGB (0..255) to nearest xterm-256 color index (0..255).
+/// Uses the 6x6x6 color cube (16..231) and the 24 grayscale ramp (232..255),
+/// picks whichever is closer in Euclidean RGB space.
+pub fn rgb_to_xterm256(r: u8, g: u8, b: u8) -> u8 {
+    // Precomputed cube levels used by xterm: 0,95,135,175,215,255
+    const CUBE: [u8; 6] = [0, 95, 135, 175, 215, 255];
+
+    // Map 0..255 -> 0..5 (cube coordinate).
+    // Use rounding: (v * 5 + 127) / 255
+    let r6 = ((r as u32 * 5 + 127) / 255) as usize;
+    let g6 = ((g as u32 * 5 + 127) / 255) as usize;
+    let b6 = ((b as u32 * 5 + 127) / 255) as usize;
+
+    let cube_index = 16 + (36 * r6 + 6 * g6 + b6) as u8;
+    let cr = CUBE[r6] as i32;
+    let cg = CUBE[g6] as i32;
+    let cb = CUBE[b6] as i32;
+
+    // Compute distance squared to the cube color
+    let dr = r as i32 - cr;
+    let dg = g as i32 - cg;
+    let db = b as i32 - cb;
+    let dist_cube = dr * dr + dg * dg + db * db;
+
+    // Compute nearest grayscale index in 232..255 (24 steps)
+    // grayscale value formula: level -> 8 + 10*level  (level 0..23)
+    let gray_level = ((r as u32 * 23 + 127) / 255) as usize;
+    // mapping r->0..23 (we use r but could average r,g,b; using r gives same result if r=g=b)
+    // Better to use perceived luminance when the color isn't gray:
+    // we compute average intensity (luma) for selection:
+    let lum = (299 * r as u32 + 587 * g as u32 + 114 * b as u32) / 1000;
+    let gray_level = ((lum * 23 + 127) / 255) as usize;
+    let gv = (8 + (gray_level as i32) * 10) as i32; // gray value 8 + 10*level
+    let drg = r as i32 - gv;
+    let dgg = g as i32 - gv;
+    let dbg = b as i32 - gv;
+    let dist_gray = drg * drg + dgg * dgg + dbg * dbg;
+
+    if dist_gray < dist_cube {
+        (232 + gray_level as u8) as u8
+    } else {
+        cube_index
     }
 }
