@@ -1,3 +1,4 @@
+use crate::comments::write_comments;
 use core::fmt;
 use std::{
     collections::HashSet,
@@ -5,16 +6,15 @@ use std::{
     io::{self, BufRead, BufReader, Cursor, Read},
     str::FromStr,
 };
-use crate::comments::write_comments;
 
 use ordermap::{OrderMap, OrderSet};
 
 use crate::error::{Error, Result};
-use crate::{ColorPair, Palette, delay::Delay};
 use crate::{
-    chars::{Char, normalize_text},
+    chars::{normalize_text, Char},
     comments::Comments,
 };
+use crate::{delay::Delay, ColorPair, Palette};
 
 /// Represents the header of a 3a file.
 #[derive(Default, Debug, Clone)]
@@ -551,7 +551,7 @@ impl Header {
                 },
                 _ => {
                     header.extra_keys.push(ExtraHeaderKey {
-                        line: String::from(key) + values,
+                        line: String::from(key) + " " + values,
                         comments: comments_buffer.clone(),
                     });
                 }
@@ -705,7 +705,7 @@ impl Header {
                 }
                 _ => {
                     header.extra_keys.push(ExtraHeaderKey {
-                        line: String::from(key) + values,
+                        line: String::from(key) + " " + values,
                         comments: comments_buffer.clone(),
                     });
                 }
@@ -731,7 +731,6 @@ fn color_name_str_to_char(name: Option<&str>) -> Result<Char> {
     let name = name.unwrap_or_default();
     Char::from_str(name)
 }
-
 
 /// Represents an unrecognized header key‑value pair with its associated comments.
 #[derive(Debug, Clone)]

@@ -23,4 +23,5 @@ man/*.gz
 examples/edited_dna.3a
 examples/dna.svg
 examples/dna.cast
+examples/dna.json
 

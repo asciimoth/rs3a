@@ -1,4 +1,4 @@
-use rs3a::{Art, font::Font, CSSColorMap};
+use rs3a::{font::Font, Art, CSSColorMap};
 use std::fs::File;
 use std::io::Write;
 
@@ -18,12 +18,18 @@ fn main() {
     // Saving
     art.to_file("./examples/edited_dna.3a").unwrap();
 
+    // Exporting to JSON
+    let mut output = File::create("./examples/dna.json").unwrap();
+    write!(output, "{}", art.to_json()).unwrap();
+
     // Exporting to SVG
     let mut output = File::create("./examples/dna.svg").unwrap();
     write!(
-        output, "{}",
+        output,
+        "{}",
         art.to_svg_frames(&CSSColorMap::default(), &Font::default())
-    ).unwrap();
+    )
+    .unwrap();
 
     // Exporting to asciicast (asciinema format).
     // You can play it with `asciinema play examples/dna.cast`.

@@ -2,20 +2,20 @@ use core::fmt;
 use io::Write;
 use ordermap::OrderMap;
 use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Cursor, Read};
 use std::path::Path;
 use std::str::FromStr;
-use std::convert::TryFrom;
 
-use crate::CSSColorMap;
-use crate::chars::Char;
+use crate::chars::{Char, UNDERSCORE};
 use crate::content::Cell;
 use crate::error::{Error, Result};
 use crate::font::Font;
 use crate::helpers::json_quote;
-use crate::{ColorPair, Comments, Palette, content::Frame, delay::Delay, header::ExtraHeaderKey};
+use crate::CSSColorMap;
 use crate::{chars::normalize_text, content::Frames, header::Header};
+use crate::{content::Frame, delay::Delay, header::ExtraHeaderKey, ColorPair, Comments, Palette};
 
 /// Represents a complete 3a ASCII art animation, including header, frames,
 /// attached content, and extra blocks.
@@ -231,7 +231,14 @@ impl Art {
     }
 
     /// Prints text to specific frame.
-    pub fn print(&mut self, frame: usize, col: usize, row: usize, line: &str, color: Option<Option<Char>>) {
+    pub fn print(
+        &mut self,
+        frame: usize,
+        col: usize,
+        row: usize,
+        line: &str,
+        color: Option<Option<Char>>,
+    ) {
         self.frames.print(frame, col, row, line, color);
     }
 }
@@ -579,7 +586,6 @@ impl Art {
 
 // Conversions
 impl Art {
-
     /// Returns the total duration of the animation in seconds.
     pub fn duration(&self) -> f64 {
         let mut dur: usize = 0;
@@ -587,6 +593,194 @@ impl Art {
             dur += self.get_frame_delay(f);
         }
         dur as f64 / 1000.0
+    }
+
+    /// Converts the art to json document with extra metadata
+    pub fn to_json(&self) -> String {
+        let mut json = String::from("{\n");
+
+        // Metadata
+        json += &format!(
+            "  \"meta\": {{\n    \"frames\": {},\n    \"width\": {},\n    \"height\": {}\n  }},\n",
+            self.frames(),
+            self.width(),
+            self.height()
+        );
+
+        // Header
+        json += "  \"header\": {\n";
+        if let Some(title) = &self.header.title {
+            json += &format!("    \"title\": {},\n", json_quote(title));
+        } else {
+            json += "    \"title\": null,\n"
+        }
+        if self.header.authors.len() > 0 {
+            json += "    \"authors\": [\n";
+            for (i, author) in self.header.authors.keys().enumerate() {
+                if i < self.header.authors.len() - 1 {
+                    json += &format!("      {},\n", json_quote(author));
+                } else {
+                    json += &format!("      {}\n", json_quote(author));
+                }
+            }
+            json += "    ],\n";
+        } else {
+            json += "    \"authors\": [],\n";
+        }
+        if self.header.orig_authors.len() > 0 {
+            json += "    \"orig-authors\": [\n";
+            for (i, author) in self.header.orig_authors.keys().enumerate() {
+                if i < self.header.orig_authors.len() - 1 {
+                    json += &format!("      {},\n", json_quote(author));
+                } else {
+                    json += &format!("      {}\n", json_quote(author));
+                }
+            }
+            json += "    ],\n";
+        } else {
+            json += "    \"orig-authors\": [],\n";
+        }
+        if let Some(src) = &self.header.src {
+            json += &format!("    \"src\": {},\n", json_quote(src));
+        } else {
+            json += "    \"src\": null,\n";
+        }
+        if let Some(editor) = &self.header.editor {
+            json += &format!("    \"editor\": {},\n", json_quote(editor));
+        } else {
+            json += "    \"editor\": null,\n";
+        }
+        json += &format!(
+            "    \"license\": {},\n",
+            json_quote(&(self.header.license.clone().unwrap_or("proprietary".into())))
+        );
+        json += &format!("    \"loop\": {},\n", self.get_loop_key());
+        json += &format!("    \"preview\": {},\n", self.header.preview.unwrap_or(0));
+        json += &format!("    \"colors\": {},\n", self.color());
+        json += "    \"palette\": {";
+        for c in "_0123456789abcdef".chars() {
+            let pair = self.get_color_map(Char::new_must(c));
+            json += &format!(
+                "{}\n      {}: {{ \"fg\": {}, \"bg\": {} }}",
+                if c == '_' { "" } else { "," },
+                json_quote(&String::from(c)),
+                json_quote(&pair.fg.to_string()),
+                json_quote(&pair.bg.to_string()),
+            );
+        }
+        for c in self.header.palette.palette.keys() {
+            if "_0123456789abcdef".contains(c.char) {
+                continue;
+            }
+            let pair = self.get_color_map(*c);
+            json += &format!(
+                ",\n      {}: {{ \"fg\": {}, \"bg\": {} }}",
+                json_quote(&c.to_string()),
+                json_quote(&pair.fg.to_string()),
+                json_quote(&pair.bg.to_string()),
+            );
+        }
+        json += "\n    },\n";
+        let tags = self.tags();
+        let tags_len = tags.len();
+        if tags.len() > 0 {
+            json += "    \"tags\": [\n";
+            for (i, tag) in tags.into_iter().enumerate() {
+                if i < tags_len - 1 {
+                    json += &format!("      {},\n", json_quote(&tag));
+                } else {
+                    json += &format!("      {}\n", json_quote(&tag));
+                }
+            }
+            json += "    ],\n";
+        } else {
+            json += "    \"tags\": [],\n";
+        }
+        if self.header.extra_keys.len() > 0 {
+            json += "    \"extra-keys\": [\n";
+            for (i, key) in self.header.extra_keys.iter().enumerate() {
+                if i < self.header.extra_keys.len() - 1 {
+                    json += &format!("      {},\n", json_quote(&key.line));
+                } else {
+                    json += &format!("      {}\n", json_quote(&key.line));
+                }
+            }
+            json += "    ]\n";
+        } else {
+            json += "    \"extra-keys\": []\n";
+        }
+        json += "  },\n";
+
+        // Attached
+        json += &format!(
+            "  \"attached\": {},\n",
+            if let Some(a) = &self.attached {
+                json_quote(a)
+            } else {
+                String::from("null")
+            }
+        );
+
+        // Extra
+        if self.extra.len() > 0 {
+            json += "  \"extra-blocks\": [\n";
+            for (i, block) in self.extra.iter().enumerate() {
+                if i < self.extra.len() - 1 {
+                    json += &format!(
+                        "    {{ \"title\": {}, \"content\": {} }},\n",
+                        json_quote(&block.title),
+                        json_quote(&block.content)
+                    );
+                } else {
+                    json += &format!(
+                        "    {{ \"title\": {}, \"content\": {} }}\n",
+                        json_quote(&block.title),
+                        json_quote(&block.content)
+                    );
+                }
+            }
+            json += "  ],\n";
+        } else {
+            json += "  \"extra-blocks\": [],\n";
+        }
+
+        // Frames
+        json += "  \"frames\": [\n";
+        for (f, frame) in self.frames.frames.iter().enumerate() {
+            json += &format!("    {{\n      \"delay\": {},\n", self.get_frame_delay(f));
+            json += "      \"text\": [\n";
+            for (r, row) in frame.rows.iter().enumerate() {
+                let mut rowstr = String::new();
+                for cell in row {
+                    rowstr.push(cell.text.char);
+                }
+                if r + 1 < frame.rows.len() {
+                    json += &format!("        {},\n", json_quote(&rowstr))
+                } else {
+                    json += &format!("        {}\n", json_quote(&rowstr))
+                }
+            }
+            json += "      ],\n      \"colors\": [\n";
+            for (r, row) in frame.rows.iter().enumerate() {
+                let mut rowstr = String::new();
+                for cell in row {
+                    rowstr.push(cell.color.unwrap_or(UNDERSCORE).char);
+                }
+                if r + 1 < frame.rows.len() {
+                    json += &format!("        {},\n", json_quote(&rowstr))
+                } else {
+                    json += &format!("        {}\n", json_quote(&rowstr))
+                }
+            }
+            json += "      ]\n";
+            if f + 1 < self.frames() {
+                json += "    },\n";
+            } else {
+                json += "    }\n";
+            }
+        }
+        json += "  ]\n}\n";
+        json
     }
 
     /// Converts the art to ASCIIcast v2 format string.
