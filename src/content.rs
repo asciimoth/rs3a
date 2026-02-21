@@ -325,6 +325,18 @@ impl Frame {
         self.rows.len()
     }
 
+    pub fn remove_color(&mut self, color: Char) {
+        for row in &mut self.rows {
+            for cell in row {
+                if let Some(c) = cell.color {
+                    if c == color {
+                        cell.color = None;
+                    }
+                }
+            }
+        }
+    }
+
     /// Shifts all rows right by `cols`, filling new cells with `fill`.
     pub fn shift_right(&mut self, cols: usize, fill: Cell) {
         let h = self.height();
@@ -701,6 +713,12 @@ impl Frames {
             ret.frames.push(Frame::new(width, height, fill));
         });
         ret
+    }
+
+    pub fn remove_color(&mut self, color: Char) {
+        for frame in &mut self.frames {
+            frame.remove_color(color);
+        }
     }
 
     /// Sets a cell in a specific frame.

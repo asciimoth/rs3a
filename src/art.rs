@@ -314,6 +314,7 @@ impl Art {
     /// Removes the color mapping for a character.
     pub fn remove_color_map(&mut self, name: Char) {
         self.header.remove_color_map(name);
+        self.frames.remove_color(name);
     }
 
     pub fn get_authors_key(&self) -> Vec<String> {
