@@ -87,6 +87,36 @@ impl Art {
         self.frames.get(frame, column, row, default)
     }
 
+    /// Remove all frames out of inclusive subrange
+    pub fn slice(&mut self, from: usize, to: usize) {
+        self.frames.slice(from, to);
+    }
+
+    /// Swap two frames
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.frames.swap(a, b);
+    }
+
+    /// Reverse frames
+    pub fn reverse(&mut self) {
+        self.frames.reverse();
+    }
+
+    /// Deduplicate frames
+    pub fn dedup(&mut self) {
+        self.frames.dedup();
+    }
+
+    /// Rotate frames foth
+    pub fn rot_forth(&mut self, k: usize) {
+        self.frames.rot_forth(k);
+    }
+
+    /// Rotate frames back
+    pub fn rot_back(&mut self, k: usize) {
+        self.frames.rot_back(k);
+    }
+
     /// Pins the color channel from the given frame to all frames.
     pub fn pin_color(&mut self, frame: usize) -> Result<()> {
         self.frames.pin_color(frame)

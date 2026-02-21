@@ -1,5 +1,8 @@
 use core::fmt;
-use std::io::{self, BufReader, Read};
+use std::{
+    io::{self, BufReader, Read},
+    slice,
+};
 
 use crate::{
     chars::{normalize_text, Char, SPACE, UNDERSCORE},
@@ -713,6 +716,47 @@ impl Frames {
             ret.frames.push(Frame::new(width, height, fill));
         });
         ret
+    }
+
+    /// Rotate frames foth
+    pub fn rot_forth(&mut self, k: usize) {
+        self.frames.rotate_right(k);
+    }
+
+    /// Rotate frames back
+    pub fn rot_back(&mut self, k: usize) {
+        self.frames.rotate_left(k);
+    }
+
+    /// Deduplicate frames
+    pub fn dedup(&mut self) {
+        self.frames.dedup();
+    }
+
+    /// Reverse frames
+    pub fn reverse(&mut self) {
+        self.frames.reverse();
+    }
+
+    /// Swap two frames
+    pub fn swap(&mut self, a: usize, b: usize) {
+        if a < self.frames.len() && b < self.frames.len() {
+            self.frames.swap(a, b);
+        }
+    }
+
+    /// Remove all frames out of inclusive subrange
+    pub fn slice(&mut self, from: usize, to: usize) {
+        let to = if self.frames.len() == 0 {
+            0
+        } else if to < self.frames.len() {
+            to
+        } else {
+            self.frames.len() - 1
+        };
+        let from = from.min(to);
+        self.frames.truncate(to + 1); // discard everything after `to`
+        self.frames.drain(..from); // discard everything before `from`
     }
 
     pub fn remove_color(&mut self, color: Char) {
