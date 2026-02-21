@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{
     io::{self, BufReader, Read},
-    slice,
+    slice, usize,
 };
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
     error::{Error, Result},
     font::Font,
     header::{Header, LegacyColorMode, LegacyHeaderInfo},
-    helpers::{escape_html, timing_for_svg},
+    helpers::{escape_html, in_range, timing_for_svg},
     Color,
 };
 
@@ -337,6 +337,28 @@ impl Frame {
                     }
                 }
             }
+        }
+    }
+
+    /// Crop frame
+    pub fn crop(&mut self, r_from: usize, r_to: usize, c_from: usize, c_to: usize) {
+        if r_to >= self.height() {
+            self.adjust_height(r_to + 1, Cell::default());
+        }
+        if c_to >= self.width() {
+            self.adjust_width(c_to + 1, Cell::default());
+        }
+        let r_to = in_range(r_to, 0, self.height());
+        let r_from = r_from.min(r_to);
+        let c_to = in_range(c_to, 0, self.width());
+        let c_from = c_from.min(c_to);
+
+        self.rows.truncate(r_to + 1); // discard everything after `to`
+        self.rows.drain(..r_from); // discard everything before `from`
+
+        for row in &mut self.rows {
+            row.truncate(c_to + 1); // discard everything after `to`
+            row.drain(..c_from); // discard everything before `from`
         }
     }
 
@@ -747,16 +769,17 @@ impl Frames {
 
     /// Remove all frames out of inclusive subrange
     pub fn slice(&mut self, from: usize, to: usize) {
-        let to = if self.frames.len() == 0 {
-            0
-        } else if to < self.frames.len() {
-            to
-        } else {
-            self.frames.len() - 1
-        };
+        let to = in_range(to, 0, self.frames());
         let from = from.min(to);
         self.frames.truncate(to + 1); // discard everything after `to`
         self.frames.drain(..from); // discard everything before `from`
+    }
+
+    /// Crop frames
+    pub fn crop(&mut self, r_from: usize, r_to: usize, c_from: usize, c_to: usize) {
+        for frame in &mut self.frames {
+            frame.crop(r_from, r_to, c_from, c_to);
+        }
     }
 
     pub fn remove_color(&mut self, color: Char) {

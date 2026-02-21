@@ -1,5 +1,19 @@
 use std::fmt::Write;
 
+pub(crate) fn in_range(mut v: usize, start: usize, end: usize) -> usize {
+    if v < start {
+        v = start;
+    }
+    if v >= end {
+        if end > 0 {
+            v = end - 1;
+        } else {
+            v = 0;
+        }
+    }
+    v
+}
+
 pub(crate) fn escape_html(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for ch in s.chars() {

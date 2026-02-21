@@ -117,6 +117,11 @@ impl Art {
         self.frames.rot_back(k);
     }
 
+    /// Crop art
+    pub fn crop(&mut self, r_from: usize, r_to: usize, c_from: usize, c_to: usize) {
+        self.frames.crop(r_from, r_to, c_from, c_to);
+    }
+
     /// Pins the color channel from the given frame to all frames.
     pub fn pin_color(&mut self, frame: usize) -> Result<()> {
         self.frames.pin_color(frame)
