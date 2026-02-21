@@ -103,7 +103,7 @@ impl Header {
         if tag.len() < 1 {
             return;
         }
-        if !self.contains_tag(&tag) {
+        if self.contains_tag(&tag) {
             return;
         }
         if self.tags.len() > 0 {

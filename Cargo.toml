@@ -1,6 +1,6 @@
 [package]
 name = "rs3a"
-version = "2.2.7"
+version = "2.2.8"
 edition = "2018"
 authors = ["asciimoth"]
 description = "Animated ascii art rust library"

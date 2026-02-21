@@ -6,6 +6,8 @@ fn main() {
     // Reading
     let mut art = Art::from_file("./examples/dna.3a").unwrap();
 
+    art.add_tag("biology");
+
     // Add new color mapping
     let color_pair = "fg:black bg:yellow".parse().unwrap();
     let color = art.search_or_create_color_map(color_pair);
