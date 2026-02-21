@@ -314,6 +314,12 @@ impl Palette {
                 return Some(*k);
             }
         }
+        for k in "_0123456789abcdef".chars() {
+            let c = Char::new_must(k);
+            if ColorPair::from_char_builtin(c) == col {
+                return Some(c);
+            }
+        }
         None
     }
     /// Checks if a character code is defined in the palette.
