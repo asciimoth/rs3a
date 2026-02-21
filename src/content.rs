@@ -360,6 +360,8 @@ impl Frame {
             row.truncate(c_to + 1); // discard everything after `to`
             row.drain(..c_from); // discard everything before `from`
         }
+
+        self.width = c_to - c_from + 1;
     }
 
     /// Shifts all rows right by `cols`, filling new cells with `fill`.
@@ -777,9 +779,23 @@ impl Frames {
 
     /// Crop frames
     pub fn crop(&mut self, r_from: usize, r_to: usize, c_from: usize, c_to: usize) {
+        if r_to >= self.height() {
+            self.adjust_height(r_to + 1, Cell::default());
+        }
+        if c_to >= self.width() {
+            self.adjust_width(c_to + 1, Cell::default());
+        }
+        let r_to = in_range(r_to, 0, self.height());
+        let r_from = r_from.min(r_to);
+        let c_to = in_range(c_to, 0, self.width());
+        let c_from = c_from.min(c_to);
+
         for frame in &mut self.frames {
             frame.crop(r_from, r_to, c_from, c_to);
         }
+
+        self.width = c_to - c_from + 1;
+        self.height = r_to - r_from + 1;
     }
 
     pub fn remove_color(&mut self, color: Char) {
