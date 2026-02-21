@@ -9,13 +9,14 @@ use std::path::Path;
 use std::str::FromStr;
 
 use crate::chars::{Char, UNDERSCORE};
+use crate::colors::apply_sgr;
 use crate::content::Cell;
 use crate::error::{Error, Result};
 use crate::font::Font;
 use crate::helpers::json_quote;
-use crate::CSSColorMap;
 use crate::{chars::normalize_text, content::Frames, header::Header};
 use crate::{content::Frame, delay::Delay, header::ExtraHeaderKey, ColorPair, Comments, Palette};
+use crate::{CSSColorMap, Color, Color4};
 
 /// Represents a complete 3a ASCII art animation, including header, frames,
 /// attached content, and extra blocks.
@@ -275,6 +276,15 @@ impl Art {
         color: Option<Option<Char>>,
     ) {
         self.frames.print(frame, col, row, line, color);
+    }
+
+    /// Prints ANSI colored text to specific frame.
+    pub fn print_ansi(&mut self, frame: usize, col: usize, row: usize, line: &str) {
+        let mut col = col;
+        for cell in parse_ansi_line(line, self) {
+            self.frames.set(frame, col, row, cell);
+            col += 1;
+        }
     }
 }
 
@@ -1087,4 +1097,80 @@ pub(crate) fn next_block<R: Read>(lines: &mut io::Lines<BufReader<R>>) -> Result
         };
     }
     Ok(None)
+}
+
+pub(crate) fn parse_ansi_line(line: &str, art: &mut Art) -> Vec<Cell> {
+    let mut out = Vec::new();
+    let mut iter = line.char_indices().peekable();
+
+    let mut fg = Color::None;
+    let mut bg = Color::None;
+
+    while let Some((_idx, ch)) = iter.next() {
+        if ch == '\x1b' {
+            if let Some(&(_, '[')) = iter.peek() {
+                iter.next(); // consume '['
+
+                let mut params = String::new();
+                let mut saw_m = false;
+
+                while let Some(&(_, c)) = iter.peek() {
+                    iter.next();
+                    if c == 'm' {
+                        saw_m = true;
+                        break;
+                    } else {
+                        params.push(c);
+                    }
+                }
+
+                if saw_m {
+                    let nums: Vec<i32> = if params.is_empty() {
+                        vec![]
+                    } else {
+                        params
+                            .split(';')
+                            .map(|s| s.parse::<i32>().unwrap_or(-999))
+                            .collect()
+                    };
+
+                    apply_sgr(&nums, &mut fg, &mut bg);
+                }
+
+                continue;
+            }
+
+            continue;
+        }
+
+        if let Ok(ch) = Char::new(ch) {
+            let color = if fg != Color::None && bg != Color::None {
+                let color = art.search_or_create_color_map(ColorPair { fg, bg });
+                Some(color)
+            } else {
+                None
+            };
+            out.push(Cell {
+                text: ch,
+                color: color,
+            });
+        }
+    }
+
+    out
+}
+
+#[test]
+fn fg_and_bg() {
+    let mut art = Art::new(1, 10, 10, Cell::default());
+    let s = "\x1b[31;44mA\x1b[0mB";
+    let v = parse_ansi_line(s, &mut art);
+
+    let pair = art.get_color_map(v[0].color.unwrap());
+    assert_eq!(v[0].text.char, 'A');
+    assert_eq!(pair.fg, Color::Color4(Color4::Red, false));
+    assert_eq!(pair.bg, Color::Color4(Color4::Blue, false));
+
+    assert_eq!(v[1].text.char, 'B');
+    assert_eq!(v[1].color, None);
 }

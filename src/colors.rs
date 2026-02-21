@@ -3,7 +3,7 @@ use std::{collections::HashMap, str::FromStr, usize};
 
 use ordermap::OrderMap;
 
-use crate::{chars::Char, comments::Comments, error::Error};
+use crate::{chars::Char, comments::Comments, error::Error, Cell};
 
 /// The four-bit ANSI color set.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -572,8 +572,6 @@ pub fn rgb_to_xterm256(r: u8, g: u8, b: u8) -> u8 {
     let dist_cube = dr * dr + dg * dg + db * db;
 
     // Compute nearest grayscale index in 232..255 (24 steps)
-    // grayscale value formula: level -> 8 + 10*level  (level 0..23)
-    let gray_level = ((r as u32 * 23 + 127) / 255) as usize;
     // mapping r->0..23 (we use r but could average r,g,b; using r gives same result if r=g=b)
     // Better to use perceived luminance when the color isn't gray:
     // we compute average intensity (luma) for selection:
@@ -589,5 +587,135 @@ pub fn rgb_to_xterm256(r: u8, g: u8, b: u8) -> u8 {
         (232 + gray_level as u8) as u8
     } else {
         cube_index
+    }
+}
+
+pub(crate) fn num_to_color4(i: usize) -> Option<Color4> {
+    match i {
+        0 => Some(Color4::Black),
+        1 => Some(Color4::Red),
+        2 => Some(Color4::Green),
+        3 => Some(Color4::Yellow),
+        4 => Some(Color4::Blue),
+        5 => Some(Color4::Magenta),
+        6 => Some(Color4::Cyan),
+        7 => Some(Color4::White),
+        _ => None,
+    }
+}
+
+pub(crate) fn apply_sgr(params: &[i32], fg: &mut Color, bg: &mut Color) {
+    if params.is_empty() {
+        *fg = Color::None;
+        *bg = Color::None;
+        return;
+    }
+
+    let mut i = 0;
+    while i < params.len() {
+        match params[i] {
+            0 => {
+                *fg = Color::None;
+                *bg = Color::None;
+                i += 1;
+            }
+
+            39 => {
+                *fg = Color::None;
+                i += 1;
+            }
+
+            49 => {
+                *bg = Color::None;
+                i += 1;
+            }
+
+            // 4-bit foreground
+            30..=37 => {
+                if let Some(c) = num_to_color4((params[i] - 30) as usize) {
+                    *fg = Color::Color4(c, false);
+                }
+                i += 1;
+            }
+
+            90..=97 => {
+                if let Some(c) = num_to_color4((params[i] - 90) as usize) {
+                    *fg = Color::Color4(c, true);
+                }
+                i += 1;
+            }
+
+            // 4-bit background
+            40..=47 => {
+                if let Some(c) = num_to_color4((params[i] - 40) as usize) {
+                    *bg = Color::Color4(c, false);
+                }
+                i += 1;
+            }
+
+            100..=107 => {
+                if let Some(c) = num_to_color4((params[i] - 100) as usize) {
+                    *bg = Color::Color4(c, true);
+                }
+                i += 1;
+            }
+
+            // Extended color (FG or BG)
+            38 | 48 => {
+                let target_fg = params[i] == 38;
+
+                if i + 1 >= params.len() {
+                    break;
+                }
+
+                match params[i + 1] {
+                    5 => {
+                        if i + 2 < params.len() && (0..=255).contains(&params[i + 2]) {
+                            let color = Color::Color256(params[i + 2] as u8);
+                            if target_fg {
+                                *fg = color;
+                            } else {
+                                *bg = color;
+                            }
+                            i += 3;
+                        } else {
+                            i += 2;
+                        }
+                    }
+
+                    2 => {
+                        if i + 4 < params.len()
+                            && (0..=255).contains(&params[i + 2])
+                            && (0..=255).contains(&params[i + 3])
+                            && (0..=255).contains(&params[i + 4])
+                        {
+                            let color = Color::RGB(
+                                params[i + 2] as u8,
+                                params[i + 3] as u8,
+                                params[i + 4] as u8,
+                            );
+
+                            if target_fg {
+                                *fg = color;
+                            } else {
+                                *bg = color;
+                            }
+
+                            i += 5;
+                        } else {
+                            i += 2;
+                        }
+                    }
+
+                    _ => {
+                        i += 2;
+                    }
+                }
+            }
+
+            _ => {
+                i += 1;
+            }
+        }
     }
 }
