@@ -1099,52 +1099,102 @@ pub(crate) fn next_block<R: Read>(lines: &mut io::Lines<BufReader<R>>) -> Result
     Ok(None)
 }
 
-pub(crate) fn parse_ansi_line(line: &str, art: &mut Art) -> Vec<Cell> {
+pub(crate) fn parse_ansi_line(ine: &str, art: &mut Art) -> Vec<Cell> {
     let mut out = Vec::new();
-    let mut iter = line.char_indices().peekable();
+    let mut iter = ine.char_indices().peekable();
 
     let mut fg = Color::None;
     let mut bg = Color::None;
 
     while let Some((_idx, ch)) = iter.next() {
         if ch == '\x1b' {
-            if let Some(&(_, '[')) = iter.peek() {
-                iter.next(); // consume '['
+            // If there's a next char, inspect it
+            if let Some(&(_, next_ch)) = iter.peek() {
+                match next_ch {
+                    '[' => {
+                        // CSI — consume '[' and parse until 'm'
+                        iter.next(); // consume '['
 
-                let mut params = String::new();
-                let mut saw_m = false;
+                        // collect until 'm' (SGR) or end
+                        let mut params = String::new();
+                        let mut saw_m = false;
+                        while let Some(&(_, c)) = iter.peek() {
+                            iter.next();
+                            if c == 'm' {
+                                saw_m = true;
+                                break;
+                            } else {
+                                params.push(c);
+                            }
+                        }
 
-                while let Some(&(_, c)) = iter.peek() {
-                    iter.next();
-                    if c == 'm' {
-                        saw_m = true;
-                        break;
-                    } else {
-                        params.push(c);
+                        if saw_m {
+                            let nums: Vec<i32> = if params.is_empty() {
+                                vec![]
+                            } else {
+                                params
+                                    .split(';')
+                                    .map(|s| s.parse::<i32>().unwrap_or(-999))
+                                    .collect()
+                            };
+                            apply_sgr(&nums, &mut fg, &mut bg);
+                        }
+                        // whether saw_m or not, skip the whole CSI sequence
+                        continue;
+                    }
+
+                    ']' => {
+                        // OSC — consume ']' and skip until BEL (\x07) or ST (ESC \)
+                        iter.next(); // consume ']'
+
+                        loop {
+                            match iter.next() {
+                                None => break, // unterminated OSC — give up at end-of-string
+                                Some((_i, c2)) => {
+                                    if c2 == '\x07' {
+                                        // BEL terminates OSC
+                                        break;
+                                    }
+                                    if c2 == '\x1b' {
+                                        // could be ESC \ (ST). Peek next char
+                                        if let Some(&(_, maybe_backslash)) = iter.peek() {
+                                            if maybe_backslash == '\\' {
+                                                // consume backslash and finish OSC
+                                                iter.next();
+                                                break;
+                                            } else {
+                                                // It's an ESC followed by something else — continue skipping
+                                                continue;
+                                            }
+                                        } else {
+                                            // ESC at end — unterminated, stop
+                                            break;
+                                        }
+                                    }
+                                    // otherwise keep skipping characters
+                                }
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    // Other ESC sequences we don't process (DCS, SOS, PM, etc.)
+                    // For now: just skip the ESC itself and continue (don't consume the following char here).
+                    _ => {
+                        // Don't consume the next_ch here — treat ESC as skipped non-printable.
+                        // If you want to recognize more control sequences, add cases here.
+                        continue;
                     }
                 }
-
-                if saw_m {
-                    let nums: Vec<i32> = if params.is_empty() {
-                        vec![]
-                    } else {
-                        params
-                            .split(';')
-                            .map(|s| s.parse::<i32>().unwrap_or(-999))
-                            .collect()
-                    };
-
-                    apply_sgr(&nums, &mut fg, &mut bg);
-                }
-
+            } else {
+                // ESC at end-of-input — ignore
                 continue;
             }
-
-            continue;
         }
 
         if let Ok(ch) = Char::new(ch) {
-            let color = if fg != Color::None && bg != Color::None {
+            let color = if fg != Color::None || bg != Color::None {
                 let color = art.search_or_create_color_map(ColorPair { fg, bg });
                 Some(color)
             } else {
@@ -1163,12 +1213,12 @@ pub(crate) fn parse_ansi_line(line: &str, art: &mut Art) -> Vec<Cell> {
 #[test]
 fn fg_and_bg() {
     let mut art = Art::new(1, 10, 10, Cell::default());
-    let s = "\x1b[31;44mA\x1b[0mB";
+    let s = "\x1b[0m\x1b]0;GAY\x1b\\\x1b[31;44m\x1b[38;2;7;214;105mA\x1b[0mB";
     let v = parse_ansi_line(s, &mut art);
 
-    let pair = art.get_color_map(v[0].color.unwrap());
     assert_eq!(v[0].text.char, 'A');
-    assert_eq!(pair.fg, Color::Color4(Color4::Red, false));
+    let pair = art.get_color_map(v[0].color.unwrap());
+    assert_eq!(pair.fg, Color::RGB(7, 214, 105));
     assert_eq!(pair.bg, Color::Color4(Color4::Blue, false));
 
     assert_eq!(v[1].text.char, 'B');
