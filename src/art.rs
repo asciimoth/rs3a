@@ -601,11 +601,15 @@ impl Art {
         let mut json = String::from("{\n");
 
         // Metadata
+        let (text_pinned, color_pinned) = self.pinned();
         json += &format!(
-            "  \"meta\": {{\n    \"frames\": {},\n    \"width\": {},\n    \"height\": {}\n  }},\n",
+            "  \"meta\": {{\n    \"frames\": {},\n    \"width\": {},\n    \"height\": {},\n    \"duration\": {},\n    \"text-pinned\": {},\n    \"color-pinned\": {}\n  }},\n",
             self.frames(),
             self.width(),
-            self.height()
+            self.height(),
+            self.duration(),
+            text_pinned,
+            color_pinned
         );
 
         // Header
