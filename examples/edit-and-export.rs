@@ -24,10 +24,15 @@ fn main() {
     let mut output = File::create("./examples/dna.json").unwrap();
     write!(output, "{}", art.to_json()).unwrap();
 
-    // Exporting to durdraw.
+    // Exporting to durformat.
     // You can play it with `durdraw play examples/dna.dur`
     let mut output = File::create("./examples/dna.dur").unwrap();
     write!(output, "{}", art.to_dur()).unwrap();
+
+    // Exporting to ttyrec.
+    // https://en.wikipedia.org/wiki/Ttyrec
+    let mut output = File::create("./examples/dna.ttyrec").unwrap();
+    output.write(&art.to_ttyrec()).unwrap();
 
     // Exporting to SVG
     let mut output = File::create("./examples/dna.svg").unwrap();

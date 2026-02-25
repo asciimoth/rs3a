@@ -1,24 +1,37 @@
 use std::convert::TryInto;
 use std::io::Read;
-use std::time::Duration;
 
 use crate::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TtyrecFrame {
-    pub timestamp_ms: usize,
+    pub(crate) timestamp_ms: usize,
     /// Raw terminal data (e.g., escape sequences, text).
-    pub text: String,
+    pub(crate) text: String,
 }
 
-pub struct TtyrecReader<R: Read> {
+impl TtyrecFrame {
+    pub(crate) fn append_to_vec(&self, output: &mut Vec<u8>) {
+        let sec = (self.timestamp_ms / 1000) as u32;
+        let usec = ((self.timestamp_ms % 1000) * 1000) as u32;
+        let data: Vec<_> = self.text.bytes().collect();
+        let len = data.len() as u32;
+
+        output.extend_from_slice(&sec.to_le_bytes());
+        output.extend_from_slice(&usec.to_le_bytes());
+        output.extend_from_slice(&len.to_le_bytes());
+        output.extend_from_slice(&data);
+    }
+}
+
+pub(crate) struct TtyrecReader<R: Read> {
     reader: R,
     buf: Vec<u8>,
     eof: bool,
 }
 
 impl<R: Read> TtyrecReader<R> {
-    pub fn new(reader: R) -> Self {
+    pub(crate) fn new(reader: R) -> Self {
         TtyrecReader {
             reader,
             buf: Vec::new(),
@@ -26,7 +39,7 @@ impl<R: Read> TtyrecReader<R> {
         }
     }
 
-    pub fn next_frame(&mut self) -> Result<Option<TtyrecFrame>, Error> {
+    pub(crate) fn next_frame(&mut self) -> Result<Option<TtyrecFrame>, Error> {
         if self.eof {
             return Ok(None);
         }

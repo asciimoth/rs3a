@@ -1057,6 +1057,36 @@ impl Art {
         (self.header, self.frames, self.attached, self.extra)
     }
 
+    pub fn to_ttyrec(&self) -> Vec<u8> {
+        let mut v = Vec::new();
+        let mut delay_acum: usize = 0;
+        for (f, frame) in self.frames.frames.iter().enumerate() {
+            let mut text = frame.ansi(&self.header.palette, self.color());
+            if f == 0 {
+                text += &format!("\x1b]0;{}\x07", self.title_line());
+            }
+            text += &format!("\x1b[{}A\n", self.height());
+            let tf = TtyrecFrame {
+                timestamp_ms: delay_acum,
+                text: text,
+            };
+            delay_acum += self.get_frame_delay(f);
+            tf.append_to_vec(&mut v);
+        }
+        if self.frames() > 0 {
+            let f = self.frames() - 1;
+            let frame = &self.frames.frames[f];
+            let mut text = frame.ansi(&self.header.palette, self.color());
+            text += "\n";
+            let tf = TtyrecFrame {
+                timestamp_ms: delay_acum,
+                text: text,
+            };
+            tf.append_to_vec(&mut v);
+        }
+        v
+    }
+
     /// Creates an Art from its components.
     pub fn from_components(
         header: Header,
