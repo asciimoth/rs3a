@@ -909,6 +909,72 @@ impl Art {
         json
     }
 
+    /// Converts the art to durformat
+    pub fn to_dur(&self) -> String {
+        let mut dur = String::from(
+            "{\n  \"DurMovie\": {\n    \"formatVersion\": 7,\n    \"colorFormat\": \"256\",\n    \"preferredFont\": \"fixed\",\n    \"encoding\": \"utf-8\",\n    \"extra\": null,\n    \"framerate\": 60.0,\n",
+        );
+        dur += &format!(
+            "    \"name\": {},\n",
+            json_quote(&self.get_title_key().unwrap_or(String::new())),
+        );
+        dur += &format!("    \"artist\": {},\n", json_quote(&self.authors_line()));
+        dur += &format!("    \"sizeX\": {},\n", self.width());
+        dur += &format!("    \"sizeY\": {},\n", self.height());
+        dur += "    \"frames\":[\n";
+        for (i, frame) in self.frames.frames.iter().enumerate() {
+            dur += "      {\n";
+            dur += &format!("        \"frameNumber\": {},\n", i + 1);
+            dur += &format!(
+                "        \"delay\": {},\n",
+                self.get_frame_delay(i) as f64 / 1000.0
+            );
+            dur += "        \"contents\": [\n";
+            for r in 0..self.height() {
+                let mut row = String::new();
+                for c in 0..self.width() {
+                    row.push(frame.get(c, r, Cell::default()).text.char);
+                }
+                row = json_quote(&row);
+                if r + 1 < self.height() {
+                    dur += &format!("          {},\n", row);
+                } else {
+                    dur += &format!("          {}\n", row);
+                }
+            }
+            dur += "        ],\n";
+            dur += "        \"colorMap\": [\n";
+            for c in 0..self.width() {
+                let mut line = String::new();
+                for r in 0..self.height() {
+                    let fg = if let Some(name) = frame.get(c, r, Cell::default()).color {
+                        self.get_color_map(name).fg.to_durdraw_color()
+                    } else {
+                        0
+                    };
+                    if r + 1 < self.height() {
+                        line += &format!("[{}, 0],", fg);
+                    } else {
+                        line += &format!("[{}, 0]", fg);
+                    }
+                }
+                if c + 1 < self.width() {
+                    dur += &format!("          [{}],\n", line);
+                } else {
+                    dur += &format!("          [{}]\n", line);
+                }
+            }
+            dur += "        ]\n";
+            if i + 1 < self.frames() {
+                dur += "      },\n";
+            } else {
+                dur += "      }\n";
+            }
+        }
+        dur += "    ]\n  }\n}\n";
+        dur
+    }
+
     /// Converts the art to ASCIIcast v2 format string.
     pub fn to_asciicast2(&self) -> String {
         let dur = self.duration();

@@ -67,6 +67,52 @@ impl Color {
             Self::RGB(r, g, b) => Self::Color256(rgb_to_xterm256(r, g, b)),
         }
     }
+
+    /// Converts color to durdraw 256 color code.
+    /// Solves some obscure color remappings in durdraw.
+    pub fn to_durdraw_color(&self) -> usize {
+        match self.to_xterm256() {
+            Color::None => 0,
+            Color::Color4(c, b) => match (c, b) {
+                (Color4::Black, true) => 241,
+                (Color4::Black, false) => 232,
+                (Color4::Red, true) => 196,
+                (Color4::Red, false) => 88,
+                (Color4::Green, true) => 46,
+                (Color4::Green, false) => 34,
+                (Color4::Yellow, true) => 220,
+                (Color4::Yellow, false) => 214,
+                (Color4::Blue, true) => 63,
+                (Color4::Blue, false) => 62,
+                (Color4::Magenta, true) => 201,
+                (Color4::Magenta, false) => 92,
+                (Color4::Cyan, true) => 51,
+                (Color4::Cyan, false) => 195,
+                (Color4::White, true) => 244,
+                (Color4::White, false) => 238,
+            },
+            Color::Color256(c) => match c {
+                0 => 16,   // black
+                1 => 88,   // red
+                2 => 34,   // green
+                3 => 214,  // yellow
+                4 => 62,   // blue
+                5 => 92,   // magenta
+                6 => 195,  // cyan
+                7 => 238,  // white / gray
+                8 => 241,  // bright-black / bright-gray
+                9 => 196,  // bright-red
+                10 => 46,  // bright-green
+                11 => 220, // bright-yellow
+                12 => 63,  // bright-blue
+                13 => 201, // bright-magenta
+                14 => 51,  // bright-cyan
+                15 => 235, // bright-white
+                c => c as usize,
+            },
+            Color::RGB(_, _, _) => unreachable!(),
+        }
+    }
 }
 
 /// Returns the default color (None).
