@@ -64,6 +64,14 @@ pub enum Error {
     /// Failed to convert string to single character (invalid length).
     StrToCharConversion(usize),
 
+    NotUtf8,
+
+    DelayOverflow,
+
+    UnexpectedEof,
+
+    TtyRecInvalidLength,
+
     /// I/O error occurred.
     Io(Arc<std::io::Error>),
 }
@@ -127,6 +135,10 @@ impl Display for Error {
             Error::StrToCharConversion(ln) => {
                 write!(f, "cannot convert str with length {} to single Char", ln)
             }
+            Error::UnexpectedEof => write!(f, "unexpected EOF"),
+            Error::TtyRecInvalidLength => write!(f, "invalid ttyrec len"),
+            Error::DelayOverflow => write!(f, "too big delay"),
+            Error::NotUtf8 => write!(f, "failed to parse text as utf-8"),
         }
     }
 }

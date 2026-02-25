@@ -9,6 +9,7 @@ pub mod error;
 pub mod font;
 pub mod header;
 mod helpers;
+mod ttyrec;
 
 pub use art::Art;
 pub use colors::{CSSColorMap, Color, Color4, ColorPair, Palette};

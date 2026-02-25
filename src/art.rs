@@ -3,6 +3,7 @@ use io::Write;
 use ordermap::OrderMap;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
+use std::default;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Cursor, Read};
 use std::path::Path;
@@ -14,6 +15,7 @@ use crate::content::Cell;
 use crate::error::{Error, Result};
 use crate::font::Font;
 use crate::helpers::json_quote;
+use crate::ttyrec::{TtyrecFrame, TtyrecReader};
 use crate::{chars::normalize_text, content::Frames, header::Header};
 use crate::{content::Frame, delay::Delay, header::ExtraHeaderKey, ColorPair, Comments, Palette};
 use crate::{CSSColorMap, Color, Color4};
@@ -1068,6 +1070,34 @@ impl Art {
             attached,
             extra,
         })
+    }
+
+    /// Converts ttyrec anomation to Art
+    pub fn from_ttyrec<R: Read>(reader: R) -> Result<Self> {
+        let mut a = Self::new(1, 10, 10, Cell::default());
+        let mut max_width: usize = 0;
+        let mut max_height: usize = 0;
+        let mut frames: Vec<Vec<Vec<Cell>>> = vec![];
+        for raw in TtyrecReader::new(reader) {
+            let raw = raw?;
+            let mut frame: Vec<Vec<Cell>> = vec![];
+            for line in raw.text.lines() {
+                let row = parse_ansi_line(line, &mut a);
+                max_width = max_width.max(row.len());
+                frame.push(row);
+            }
+            max_height = max_height.max(frame.len());
+            frames.push(frame);
+        }
+        let mut art = Self::new(frames.len(), max_width, max_height, Cell::default());
+        for (f, frame) in frames.iter().enumerate() {
+            for (r, row) in frame.iter().enumerate() {
+                for (c, cell) in row.iter().enumerate() {
+                    art.set(f, c, r, *cell);
+                }
+            }
+        }
+        Ok(art)
     }
 
     /// Constructs art from plain text with ANSI color escape codes.
