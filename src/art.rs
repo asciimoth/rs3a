@@ -1070,6 +1070,26 @@ impl Art {
         })
     }
 
+    /// Constructs art from plain text with ANSI color escape codes.
+    pub fn from_ansi_text(text: &str) -> Self {
+        let mut a = Self::new(1, 10, 10, Cell::default());
+        let mut rows: Vec<Vec<Cell>> = Vec::new();
+        let mut max_width: usize = 0;
+        for line in text.lines() {
+            let row = parse_ansi_line(line, &mut a);
+            max_width = max_width.max(row.len());
+            rows.push(row);
+        }
+        let mut art = Self::new(1, max_width, rows.len(), Cell::default());
+        art.header.palette = a.header.palette;
+        for (r, row) in rows.iter().enumerate() {
+            for (c, cell) in row.iter().enumerate() {
+                art.set(0, c, r, *cell);
+            }
+        }
+        art
+    }
+
     /// Reads an Art from a file.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         Self::from_reader(File::open(path)?)
