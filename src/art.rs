@@ -979,6 +979,18 @@ impl Art {
 
     /// Converts the art to ASCIIcast v2 format string.
     pub fn to_asciicast2(&self) -> String {
+        let (mut cast, dur) = self.to_asciicast2_internal();
+        cast += format!("[{}, \"o\", {}]\n", dur, json_quote("\x1b[?25h")).as_str();
+        cast
+    }
+
+    /// Converts the art to ASCIIcast v2 format string with disabled cursor.
+    pub fn to_asciicast2_no_cursor(&self) -> String {
+        let (cast, _) = self.to_asciicast2_internal();
+        cast
+    }
+
+    fn to_asciicast2_internal(&self) -> (String, f64) {
         let dur = self.duration();
         let mut cast = match self.header.title {
             Some(_) => format!(
@@ -1009,8 +1021,7 @@ impl Art {
             cum_time += self.get_frame_delay(f)
         }
         cast += format!("[{}, \"o\", {}]\n", dur, json_quote(&"\n".repeat(h))).as_str();
-        cast += format!("[{}, \"o\", {}]\n", dur, json_quote("\x1b[?25h")).as_str();
-        cast
+        (cast, dur)
     }
 
     /// Converts the art to an SVG frames string using the given CSS color map and font.
