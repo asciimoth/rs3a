@@ -1,4 +1,6 @@
 An animated ASCII art rust library, implementing the [3a format](https://github.com/asciimoth/3a).  
+[![3a logo](https://github.com/asciimoth/3a/blob/main/logo.webp)](https://github.com/asciimoth/3a/blob/main/logo.3a)
+
 Features:
 - reading/writing the [new 3a format](https://github.com/asciimoth/3a/blob/main/3a.md)
 - partial support for the [legacy 3a format](https://github.com/asciimoth/3a/blob/main/3a_legacy_spec.md)
