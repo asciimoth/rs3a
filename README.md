@@ -14,7 +14,7 @@ Features:
 - [aaa](https://github.com/asciimoth/aaa) – a TUI tool for rendering 3a files
 
 ## Examples of 3a art
-- [3a art storage](https://github.com/asciimoth/3a_storage)
+- [open source asci art storage](https://openascii.moth.contact)
 - [3a logo](https://github.com/asciimoth/3a/blob/main/logo.3a)
 
 ## Other 3a implementations
