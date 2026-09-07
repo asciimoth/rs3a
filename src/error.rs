@@ -72,6 +72,9 @@ pub enum Error {
 
     TtyRecInvalidLength,
 
+    /// Invalid dimensions or hints for tiled plain text conversion.
+    InvalidTiledTextOptions(String),
+
     /// I/O error occurred.
     Io(Arc<std::io::Error>),
 }
@@ -137,6 +140,9 @@ impl Display for Error {
             }
             Error::UnexpectedEof => write!(f, "unexpected EOF"),
             Error::TtyRecInvalidLength => write!(f, "invalid ttyrec len"),
+            Error::InvalidTiledTextOptions(message) => {
+                write!(f, "invalid tiled text options: {}", message)
+            }
             Error::DelayOverflow => write!(f, "too big delay"),
             Error::NotUtf8 => write!(f, "failed to parse text as utf-8"),
         }

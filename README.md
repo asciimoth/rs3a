@@ -9,6 +9,7 @@ Features:
     - SVG
     - [asciicast v2](https://docs.asciinema.org/manual/asciicast/v2/)
     - plain text with ANSI color [escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code)
+    - colorless plain text with animation frames in a grid
 
 ## Used in
 - [aaa](https://github.com/asciimoth/aaa) – a TUI tool for rendering 3a files

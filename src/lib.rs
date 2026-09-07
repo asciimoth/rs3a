@@ -9,6 +9,7 @@ pub mod error;
 pub mod font;
 pub mod header;
 mod helpers;
+pub mod tiled_text;
 mod ttyrec;
 
 pub use art::Art;
@@ -18,3 +19,4 @@ pub use content::{Cell, Frame, Frames};
 pub use delay::Delay;
 pub use error::{Error, Result};
 pub use header::{ExtraHeaderKey, Header, LegacyColorMode, LegacyHeaderInfo, Tagline};
+pub use tiled_text::TiledTextOptions;
